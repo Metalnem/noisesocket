@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard1.3</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageId>NoiseSocket.NET</PackageId>
     <Title>NoiseSocket.NET</Title>
@@ -18,7 +18,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Noise.NET" Version="0.9.2-rc" />
+    <PackageReference Include="Noise.NET" Version="0.9.3-rc" />
   </ItemGroup>
 
 </Project>
