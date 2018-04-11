@@ -36,24 +36,62 @@ namespace Noise
 			int noiseMessageLen = Math.Max(unpaddedLen, paddedLen);
 			Debug.Assert(noiseMessageLen <= UInt16.MaxValue);
 
-			byte[] transportMessage = new byte[LenFieldSize + noiseMessageLen];
-			Span<byte> noiseMessage = transportMessage.AsSpan().Slice(LenFieldSize);
+			var transportMessage = new byte[LenFieldSize + noiseMessageLen];
+			var ciphertext = transportMessage.AsSpan().Slice(LenFieldSize);
 
 			BinaryPrimitives.WriteUInt16BigEndian(transportMessage, (ushort)noiseMessageLen);
-			BinaryPrimitives.WriteUInt16BigEndian(noiseMessage, (ushort)messageBody.Length);
-			messageBody.CopyTo(noiseMessage.Slice(LenFieldSize));
+			BinaryPrimitives.WriteUInt16BigEndian(ciphertext, (ushort)messageBody.Length);
+			messageBody.CopyTo(ciphertext.Slice(LenFieldSize));
 
-			var payload = noiseMessage.Slice(0, noiseMessageLen - TagSize);
-			var written = transport.WriteMessage(payload, noiseMessage);
-
-			Debug.Assert(written == noiseMessageLen);
+			var payload = ciphertext.Slice(0, noiseMessageLen - TagSize);
+			var written = transport.WriteMessage(payload, ciphertext);
+			Debug.Assert(written == ciphertext.Length);
 
 			return transportMessage;
 		}
 
 		public byte[] ReadMessage(ReadOnlySpan<byte> transportMessage)
 		{
-			throw new NotImplementedException();
+			Exceptions.ThrowIfDisposed(disposed, nameof(Socket));
+
+			if (transport == null)
+			{
+				throw new InvalidOperationException("Cannot call ReadMessage before the handshake has been completed.");
+			}
+
+			if (transportMessage.Length > Protocol.MaxMessageLength)
+			{
+				throw new ArgumentException($"Transport message must be less than or equal to {Protocol.MaxMessageLength} bytes in length.");
+			}
+
+			int minSize = LenFieldSize + LenFieldSize + TagSize;
+
+			if (transportMessage.Length < minSize)
+			{
+				throw new ArgumentException($"Transport message must be greater than or equal to {minSize} bytes in length.");
+			}
+
+			var noiseMessageLen = BinaryPrimitives.ReadUInt16BigEndian(transportMessage);
+			var noiseMessage = transportMessage.Slice(LenFieldSize);
+
+			if (noiseMessageLen != noiseMessage.Length)
+			{
+				throw new ArgumentException("Invalid transport message length.");
+			}
+
+			Span<byte> plaintext = stackalloc byte[noiseMessageLen - TagSize];
+			int read = transport.ReadMessage(noiseMessage, plaintext);
+			Debug.Assert(read == plaintext.Length);
+
+			var padded = plaintext.Slice(LenFieldSize);
+			var bodyLen = BinaryPrimitives.ReadUInt16BigEndian(plaintext);
+
+			if (bodyLen > padded.Length)
+			{
+				throw new ArgumentException("Invalid message body length.");
+			}
+
+			return padded.Slice(0, bodyLen).ToArray();
 		}
 
 		public void Dispose()
