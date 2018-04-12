@@ -14,24 +14,19 @@ namespace Noise
 		private Transport transport;
 		private bool disposed;
 
-		public void WriteMessage(Stream stream, ReadOnlySpan<byte> messageBody, int paddedLen = 0)
+		public void WriteMessage(Stream stream, ReadOnlySpan<byte> messageBody, ushort paddedLen = 0)
 		{
 			byte[] message = WriteMessage(messageBody, paddedLen);
 			stream.Write(message, 0, message.Length);
 		}
 
-		private byte[] WriteMessage(ReadOnlySpan<byte> messageBody, int paddedLen)
+		private byte[] WriteMessage(ReadOnlySpan<byte> messageBody, ushort paddedLen)
 		{
 			Exceptions.ThrowIfDisposed(disposed, nameof(Socket));
 
 			if (transport == null)
 			{
 				throw new InvalidOperationException("Cannot call WriteMessage before the handshake has been completed.");
-			}
-
-			if (paddedLen > Protocol.MaxMessageLength)
-			{
-				throw new ArgumentException($"Padded length must be less than or equal to {Protocol.MaxMessageLength} bytes in length.");
 			}
 
 			int unpaddedLen = LenFieldSize + messageBody.Length + TagSize;
