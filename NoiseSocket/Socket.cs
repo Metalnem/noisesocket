@@ -14,7 +14,13 @@ namespace Noise
 		private Transport transport;
 		private bool disposed;
 
-		public byte[] WriteMessage(ReadOnlySpan<byte> messageBody, int paddedLen = 0)
+		public void WriteMessage(Stream stream, ReadOnlySpan<byte> messageBody, int paddedLen = 0)
+		{
+			byte[] message = WriteMessage(messageBody, paddedLen);
+			stream.Write(message, 0, message.Length);
+		}
+
+		private byte[] WriteMessage(ReadOnlySpan<byte> messageBody, int paddedLen)
 		{
 			Exceptions.ThrowIfDisposed(disposed, nameof(Socket));
 
@@ -79,7 +85,7 @@ namespace Noise
 				throw new ArgumentException($"Transport message must be greater than or equal to {minSize} bytes in length.");
 			}
 
-			var read = transport.ReadMessage(noiseMessage, noiseMessage);
+			int read = transport.ReadMessage(noiseMessage, noiseMessage);
 			Debug.Assert(read == noiseMessage.Length - TagSize);
 
 			var plaintext = noiseMessage.AsSpan().Slice(read);
