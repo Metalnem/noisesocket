@@ -1,6 +1,8 @@
 using System;
 using System.Buffers.Binary;
 using System.Diagnostics;
+using System.IO;
+using System.Text;
 
 namespace Noise
 {
@@ -50,7 +52,7 @@ namespace Noise
 			return transportMessage;
 		}
 
-		public byte[] ReadMessage(ReadOnlySpan<byte> transportMessage)
+		public byte[] ReadMessage(Stream stream)
 		{
 			Exceptions.ThrowIfDisposed(disposed, nameof(Socket));
 
@@ -59,32 +61,30 @@ namespace Noise
 				throw new InvalidOperationException("Cannot call ReadMessage before the handshake has been completed.");
 			}
 
-			if (transportMessage.Length > Protocol.MaxMessageLength)
+			using (var reader = new BinaryReader(stream, Encoding.ASCII, true))
 			{
-				throw new ArgumentException($"Transport message must be less than or equal to {Protocol.MaxMessageLength} bytes in length.");
+				var noiseMessageLen = BinaryPrimitives.ReverseEndianness(reader.ReadUInt16());
+				var noiseMessage = reader.ReadBytes(noiseMessageLen);
+
+				return ReadMessage(noiseMessage);
 			}
+		}
 
-			int minSize = LenFieldSize + LenFieldSize + TagSize;
+		private byte[] ReadMessage(byte[] noiseMessage)
+		{
+			int minSize = LenFieldSize + TagSize;
 
-			if (transportMessage.Length < minSize)
+			if (noiseMessage.Length < minSize)
 			{
 				throw new ArgumentException($"Transport message must be greater than or equal to {minSize} bytes in length.");
 			}
 
-			var noiseMessageLen = BinaryPrimitives.ReadUInt16BigEndian(transportMessage);
-			var noiseMessage = transportMessage.Slice(LenFieldSize);
+			var read = transport.ReadMessage(noiseMessage, noiseMessage);
+			Debug.Assert(read == noiseMessage.Length - TagSize);
 
-			if (noiseMessageLen != noiseMessage.Length)
-			{
-				throw new ArgumentException("Invalid transport message length.");
-			}
-
-			Span<byte> plaintext = stackalloc byte[noiseMessageLen - TagSize];
-			int read = transport.ReadMessage(noiseMessage, plaintext);
-			Debug.Assert(read == plaintext.Length);
-
-			var padded = plaintext.Slice(LenFieldSize);
+			var plaintext = noiseMessage.AsSpan().Slice(read);
 			var bodyLen = BinaryPrimitives.ReadUInt16BigEndian(plaintext);
+			var padded = plaintext.Slice(LenFieldSize);
 
 			if (bodyLen > padded.Length)
 			{
