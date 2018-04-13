@@ -11,8 +11,63 @@ namespace Noise
 		private const int LenFieldSize = 2;
 		private const int TagSize = 16;
 
+		private HandshakeState handshakeState;
 		private Transport transport;
 		private bool disposed;
+
+		public void WriteHandshakeMessage(Stream stream, ReadOnlySpan<byte> negotiationData, ReadOnlySpan<byte> messageBody)
+		{
+			byte[] message = WriteHandshakeMessage(negotiationData, messageBody);
+			stream.Write(message, 0, message.Length);
+		}
+
+		private byte[] WriteHandshakeMessage(ReadOnlySpan<byte> negotiationData, ReadOnlySpan<byte> messageBody)
+		{
+			Exceptions.ThrowIfDisposed(disposed, nameof(Socket));
+
+			if (handshakeState == null)
+			{
+				throw new InvalidOperationException("Cannot call WriteHandshakeMessage after the handshake has been completed.");
+			}
+
+			if (negotiationData.Length > Protocol.MaxMessageLength)
+			{
+				throw new ArgumentException($"Negotiation data must be less than or equal to {Protocol.MaxMessageLength} bytes in length.");
+			}
+
+			if (messageBody.Length > Protocol.MaxMessageLength)
+			{
+				throw new ArgumentException($"Handshake message must be less than or equal to {Protocol.MaxMessageLength} bytes in length.");
+			}
+
+			Span<byte> noiseMessage = new byte[LenFieldSize + messageBody.Length];
+			BinaryPrimitives.WriteUInt16BigEndian(noiseMessage, (ushort)messageBody.Length);
+			messageBody.CopyTo(noiseMessage.Slice(LenFieldSize));
+
+			var buffer = new byte[Protocol.MaxMessageLength];
+			var (written, hash, transport) = handshakeState.WriteMessage(noiseMessage, buffer);
+			Debug.Assert(written <= Protocol.MaxMessageLength);
+
+			if (transport != null)
+			{
+				handshakeState.Dispose();
+				handshakeState = null;
+
+				this.transport = transport;
+			}
+
+			byte[] handshakeMessage = new byte[LenFieldSize + negotiationData.Length + LenFieldSize + written];
+
+			Span<byte> negotiationDataPart = handshakeMessage.AsSpan().Slice(0, LenFieldSize + negotiationData.Length);
+			BinaryPrimitives.WriteUInt16BigEndian(negotiationDataPart, (ushort)negotiationData.Length);
+			negotiationData.CopyTo(negotiationDataPart.Slice(LenFieldSize));
+
+			Span<byte> messageBodyPart = handshakeMessage.AsSpan().Slice(negotiationDataPart.Length);
+			BinaryPrimitives.WriteUInt16BigEndian(messageBodyPart, (ushort)written);
+			buffer.AsSpan().Slice(0, written).CopyTo(messageBodyPart.Slice(LenFieldSize));
+
+			return handshakeMessage;
+		}
 
 		public void WriteMessage(Stream stream, ReadOnlySpan<byte> messageBody, ushort paddedLen = 0)
 		{
@@ -99,6 +154,7 @@ namespace Noise
 		{
 			if (!disposed)
 			{
+				handshakeState?.Dispose();
 				transport?.Dispose();
 				disposed = true;
 			}
