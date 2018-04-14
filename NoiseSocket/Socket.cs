@@ -53,10 +53,9 @@ namespace Noise
 				throw new ArgumentException($"Handshake message must be less than or equal to {Protocol.MaxMessageLength} bytes in length.");
 			}
 
-			Memory<byte> plaintext = WritePacket(messageBody);
-			Memory<byte> ciphertext = new byte[LenFieldSize + Protocol.MaxMessageLength];
-
-			var (written, hash, transport) = handshakeState.WriteMessage(plaintext.Span, ciphertext.Slice(LenFieldSize).Span);
+			var plaintext = WritePacket(messageBody.Span);
+			var ciphertext = new byte[LenFieldSize + Protocol.MaxMessageLength];
+			var (written, hash, transport) = handshakeState.WriteMessage(plaintext, ciphertext.AsSpan().Slice(LenFieldSize));
 
 			if (transport != null)
 			{
@@ -66,10 +65,10 @@ namespace Noise
 				this.transport = transport;
 			}
 
-			var negotiationMessage = WritePacket(negotiationData);
+			var negotiationMessage = WritePacket(negotiationData.Span);
 			await stream.WriteAsync(negotiationMessage, 0, negotiationMessage.Length, cancellationToken).ConfigureAwait(false);
 
-			var noiseMessage = WritePacket(ciphertext.Slice(0, LenFieldSize + written));
+			var noiseMessage = WritePacket(ciphertext.AsReadOnlySpan().Slice(0, LenFieldSize + written));
 			await stream.WriteAsync(noiseMessage, 0, noiseMessage.Length, cancellationToken).ConfigureAwait(false);
 		}
 
@@ -159,28 +158,27 @@ namespace Noise
 				throw new InvalidOperationException($"Cannot call {nameof(ReadMessageAsync)} before the handshake has been completed.");
 			}
 
-			Memory<byte> noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
-			int minSize = LenFieldSize + TagSize;
+			var noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
+			var minSize = LenFieldSize + TagSize;
 
 			if (noiseMessage.Length < minSize)
 			{
 				throw new ArgumentException($"Transport message must be greater than or equal to {minSize} bytes in length.");
 			}
 
-			var read = transport.ReadMessage(noiseMessage.Span, noiseMessage.Span);
-			var plaintext = noiseMessage.Slice(0, read);
+			var read = transport.ReadMessage(noiseMessage, noiseMessage);
 
-			return ReadPacket(plaintext.Span);
+			return ReadPacket(noiseMessage.AsReadOnlySpan().Slice(0, read));
 		}
 
-		private static byte[] WritePacket(Memory<byte> data)
+		private static byte[] WritePacket(ReadOnlySpan<byte> data)
 		{
 			int length = data.Length;
 			Debug.Assert(length < UInt16.MaxValue);
 
 			byte[] message = new byte[LenFieldSize + length];
 			BinaryPrimitives.WriteUInt16BigEndian(message, (ushort)length);
-			data.Span.CopyTo(message.AsSpan().Slice(LenFieldSize));
+			data.CopyTo(message.AsSpan().Slice(LenFieldSize));
 
 			return message;
 		}
