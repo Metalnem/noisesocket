@@ -26,7 +26,7 @@ namespace Noise
 
 			if (handshakeState == null)
 			{
-				throw new InvalidOperationException("Cannot call WriteHandshakeMessage after the handshake has been completed.");
+				throw new InvalidOperationException($"Cannot call {nameof(WriteHandshakeMessageAsync)} after the handshake has been completed.");
 			}
 
 			if (negotiationData.Length > Protocol.MaxMessageLength)
@@ -39,7 +39,7 @@ namespace Noise
 				throw new ArgumentException($"Handshake message must be less than or equal to {Protocol.MaxMessageLength} bytes in length.");
 			}
 
-			Memory<byte> plaintext = PrependLength(messageBody);
+			Memory<byte> plaintext = WritePacket(messageBody);
 			Memory<byte> ciphertext = new byte[LenFieldSize + Protocol.MaxMessageLength];
 
 			var (written, hash, transport) = handshakeState.WriteMessage(plaintext.Span, ciphertext.Slice(LenFieldSize).Span);
@@ -54,14 +54,26 @@ namespace Noise
 				this.transport = transport;
 			}
 
-			var negotiationMessage = PrependLength(negotiationData);
+			var negotiationMessage = WritePacket(negotiationData);
 			await stream.WriteAsync(negotiationMessage, cancellationToken).ConfigureAwait(false);
 
-			var noiseMessage = PrependLength(ciphertext.Slice(0, LenFieldSize + written));
+			var noiseMessage = WritePacket(ciphertext.Slice(0, LenFieldSize + written));
 			await stream.WriteAsync(noiseMessage, cancellationToken).ConfigureAwait(false);
 		}
 
-		public async Task WriteMessageAsync(
+		public Task<byte[]> PeekHandshakeMessageAsync(Stream stream, CancellationToken cancellationToken = default)
+		{
+			Exceptions.ThrowIfDisposed(disposed, nameof(Socket));
+
+			if (handshakeState == null)
+			{
+				throw new InvalidOperationException($"Cannot call {nameof(PeekHandshakeMessageAsync)} after the handshake has been completed.");
+			}
+
+			return ReadPacketAsync(stream, cancellationToken);
+		}
+
+		public Task WriteMessageAsync(
 			Stream stream,
 			Memory<byte> messageBody,
 			ushort paddedLen = 0,
@@ -71,7 +83,7 @@ namespace Noise
 
 			if (transport == null)
 			{
-				throw new InvalidOperationException("Cannot call WriteMessage before the handshake has been completed.");
+				throw new InvalidOperationException($"Cannot call {nameof(WriteMessageAsync)} before the handshake has been completed.");
 			}
 
 			int unpaddedLen = LenFieldSize + messageBody.Length + TagSize;
@@ -93,7 +105,7 @@ namespace Noise
 			var written = transport.WriteMessage(payload.Span, ciphertext.Span);
 			Debug.Assert(written == ciphertext.Length);
 
-			await stream.WriteAsync(transportMessage, cancellationToken).ConfigureAwait(false);
+			return stream.WriteAsync(transportMessage, cancellationToken);
 		}
 
 		public async Task<byte[]> ReadMessageAsync(Stream stream, CancellationToken cancellationToken = default)
@@ -102,23 +114,19 @@ namespace Noise
 
 			if (transport == null)
 			{
-				throw new InvalidOperationException("Cannot call ReadMessage before the handshake has been completed.");
+				throw new InvalidOperationException($"Cannot call {nameof(ReadMessageAsync)} before the handshake has been completed.");
 			}
 
-			Memory<byte> lenBuffer = new byte[LenFieldSize];
-			await stream.ReadAsync(lenBuffer, cancellationToken).ConfigureAwait(false);
+			Memory<byte> noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
+			int minSize = LenFieldSize + TagSize;
 
-			var noiseMessageLen = BinaryPrimitives.ReadUInt16BigEndian(lenBuffer.Span);
-			var minSize = LenFieldSize + TagSize;
-
-			if (noiseMessageLen < minSize)
+			if (noiseMessage.Length < minSize)
 			{
 				throw new ArgumentException($"Transport message must be greater than or equal to {minSize} bytes in length.");
 			}
 
-			Memory<byte> noiseMessage = new byte[noiseMessageLen];
 			int read = transport.ReadMessage(noiseMessage.Span, noiseMessage.Span);
-			Debug.Assert(read == noiseMessageLen - TagSize);
+			Debug.Assert(read == noiseMessage.Length - TagSize);
 
 			var plaintext = noiseMessage.Slice(0, read);
 			var bodyLen = BinaryPrimitives.ReadUInt16BigEndian(plaintext.Span);
@@ -132,7 +140,7 @@ namespace Noise
 			return padded.Slice(0, bodyLen).ToArray();
 		}
 
-		private static Memory<byte> PrependLength(Memory<byte> data)
+		private static Memory<byte> WritePacket(Memory<byte> data)
 		{
 			int length = data.Length;
 			Debug.Assert(length < UInt16.MaxValue);
@@ -142,6 +150,17 @@ namespace Noise
 			data.CopyTo(message.Slice(LenFieldSize));
 
 			return message;
+		}
+
+		private static async Task<byte[]> ReadPacketAsync(Stream stream, CancellationToken cancellationToken = default)
+		{
+			Memory<byte> lengthBuffer = new byte[LenFieldSize];
+			await stream.ReadAsync(lengthBuffer, cancellationToken).ConfigureAwait(false);
+
+			var data = new byte[BinaryPrimitives.ReadUInt16BigEndian(lengthBuffer.Span)];
+			await stream.ReadAsync(data, cancellationToken).ConfigureAwait(false);
+
+			return data;
 		}
 
 		public void Dispose()
