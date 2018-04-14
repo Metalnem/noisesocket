@@ -1,5 +1,6 @@
 using System;
 using System.Buffers.Binary;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -15,6 +16,19 @@ namespace Noise
 		private HandshakeState handshakeState;
 		private Transport transport;
 		private bool disposed;
+
+		public Socket(
+			Protocol protocol,
+			bool initiator,
+			byte[] prologue = default,
+			byte[] s = default,
+			byte[] rs = default,
+			IEnumerable<byte[]> psks = default)
+		{
+			Exceptions.ThrowIfNull(protocol, nameof(protocol));
+
+			handshakeState = protocol.Create(initiator, prologue, s, rs, psks);
+		}
 
 		public async Task WriteHandshakeMessageAsync(
 			Stream stream,
