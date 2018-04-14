@@ -43,8 +43,6 @@ namespace Noise
 			Memory<byte> ciphertext = new byte[LenFieldSize + Protocol.MaxMessageLength];
 
 			var (written, hash, transport) = handshakeState.WriteMessage(plaintext.Span, ciphertext.Slice(LenFieldSize).Span);
-			Debug.Assert(written >= plaintext.Length);
-			Debug.Assert(written <= Protocol.MaxMessageLength);
 
 			if (transport != null)
 			{
@@ -71,6 +69,37 @@ namespace Noise
 			}
 
 			return ReadPacketAsync(stream, cancellationToken);
+		}
+
+		public async Task<byte[]> ReadHandshakeMessageAsync(Stream stream, CancellationToken cancellationToken = default)
+		{
+			Exceptions.ThrowIfDisposed(disposed, nameof(Socket));
+
+			if (handshakeState == null)
+			{
+				throw new InvalidOperationException($"Cannot call {nameof(ReadHandshakeMessageAsync)} after the handshake has been completed.");
+			}
+
+			var noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
+			var minSize = LenFieldSize + TagSize;
+
+			if (noiseMessage.Length < minSize)
+			{
+				throw new ArgumentException($"Handshake message must be greater than or equal to {minSize} bytes in length.");
+			}
+
+			var plaintext = new byte[noiseMessage.Length];
+			var (read, hash, transport) = handshakeState.ReadMessage(noiseMessage, plaintext);
+
+			if (transport != null)
+			{
+				handshakeState.Dispose();
+				handshakeState = null;
+
+				this.transport = transport;
+			}
+
+			return ReadPacket(plaintext.AsReadOnlySpan().Slice(0, read));
 		}
 
 		public Task WriteMessageAsync(
@@ -103,7 +132,6 @@ namespace Noise
 
 			var payload = ciphertext.Slice(0, noiseMessageLen - TagSize);
 			var written = transport.WriteMessage(payload.Span, ciphertext.Span);
-			Debug.Assert(written == ciphertext.Length);
 
 			return stream.WriteAsync(transportMessage, cancellationToken);
 		}
@@ -125,19 +153,10 @@ namespace Noise
 				throw new ArgumentException($"Transport message must be greater than or equal to {minSize} bytes in length.");
 			}
 
-			int read = transport.ReadMessage(noiseMessage.Span, noiseMessage.Span);
-			Debug.Assert(read == noiseMessage.Length - TagSize);
-
+			var read = transport.ReadMessage(noiseMessage.Span, noiseMessage.Span);
 			var plaintext = noiseMessage.Slice(0, read);
-			var bodyLen = BinaryPrimitives.ReadUInt16BigEndian(plaintext.Span);
-			var padded = plaintext.Slice(LenFieldSize);
 
-			if (bodyLen > padded.Length)
-			{
-				throw new ArgumentException("Invalid message body length.");
-			}
-
-			return padded.Slice(0, bodyLen).ToArray();
+			return ReadPacket(plaintext.Span);
 		}
 
 		private static Memory<byte> WritePacket(Memory<byte> data)
@@ -150,6 +169,24 @@ namespace Noise
 			data.CopyTo(message.Slice(LenFieldSize));
 
 			return message;
+		}
+
+		private static byte[] ReadPacket(ReadOnlySpan<byte> packet)
+		{
+			if (packet.Length < LenFieldSize)
+			{
+				throw new ArgumentException($"Packet must be greater than or equal to {LenFieldSize} bytes in length.");
+			}
+
+			var length = BinaryPrimitives.ReadUInt16BigEndian(packet);
+			var data = packet.Slice(LenFieldSize);
+
+			if (length > data.Length)
+			{
+				throw new ArgumentException("Invalid message body length.");
+			}
+
+			return data.Slice(0, length).ToArray();
 		}
 
 		private static async Task<byte[]> ReadPacketAsync(Stream stream, CancellationToken cancellationToken = default)
