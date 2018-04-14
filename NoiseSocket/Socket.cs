@@ -2,7 +2,6 @@ using System;
 using System.Buffers.Binary;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,7 +16,7 @@ namespace Noise
 		private Transport transport;
 		private bool disposed;
 
-		public async Task WriteHandshakeMessage(
+		public async Task WriteHandshakeMessageAsync(
 			Stream stream,
 			Memory<byte> negotiationData,
 			Memory<byte> messageBody,
@@ -58,11 +57,11 @@ namespace Noise
 			var negotiationMessage = PrependLength(negotiationData);
 			await stream.WriteAsync(negotiationMessage, cancellationToken).ConfigureAwait(false);
 
-			var noiseMessage = PrependLength(ciphertext.Slice(LenFieldSize + written));
+			var noiseMessage = PrependLength(ciphertext.Slice(0, LenFieldSize + written));
 			await stream.WriteAsync(noiseMessage, cancellationToken).ConfigureAwait(false);
 		}
 
-		public async Task WriteMessage(
+		public async Task WriteMessageAsync(
 			Stream stream,
 			Memory<byte> messageBody,
 			ushort paddedLen = 0,
@@ -97,7 +96,7 @@ namespace Noise
 			await stream.WriteAsync(transportMessage, cancellationToken).ConfigureAwait(false);
 		}
 
-		public byte[] ReadMessage(Stream stream)
+		public async Task<byte[]> ReadMessageAsync(Stream stream, CancellationToken cancellationToken = default)
 		{
 			Exceptions.ThrowIfDisposed(disposed, nameof(Socket));
 
@@ -106,29 +105,23 @@ namespace Noise
 				throw new InvalidOperationException("Cannot call ReadMessage before the handshake has been completed.");
 			}
 
-			using (var reader = new BinaryReader(stream, Encoding.ASCII, true))
-			{
-				var noiseMessageLen = BinaryPrimitives.ReverseEndianness(reader.ReadUInt16());
-				var noiseMessage = reader.ReadBytes(noiseMessageLen);
+			Memory<byte> lenBuffer = new byte[LenFieldSize];
+			await stream.ReadAsync(lenBuffer, cancellationToken).ConfigureAwait(false);
 
-				return ReadMessage(noiseMessage);
-			}
-		}
+			var noiseMessageLen = BinaryPrimitives.ReadUInt16BigEndian(lenBuffer.Span);
+			var minSize = LenFieldSize + TagSize;
 
-		private byte[] ReadMessage(byte[] noiseMessage)
-		{
-			int minSize = LenFieldSize + TagSize;
-
-			if (noiseMessage.Length < minSize)
+			if (noiseMessageLen < minSize)
 			{
 				throw new ArgumentException($"Transport message must be greater than or equal to {minSize} bytes in length.");
 			}
 
-			int read = transport.ReadMessage(noiseMessage, noiseMessage);
-			Debug.Assert(read == noiseMessage.Length - TagSize);
+			Memory<byte> noiseMessage = new byte[noiseMessageLen];
+			int read = transport.ReadMessage(noiseMessage.Span, noiseMessage.Span);
+			Debug.Assert(read == noiseMessageLen - TagSize);
 
-			var plaintext = noiseMessage.AsSpan().Slice(read);
-			var bodyLen = BinaryPrimitives.ReadUInt16BigEndian(plaintext);
+			var plaintext = noiseMessage.Slice(0, read);
+			var bodyLen = BinaryPrimitives.ReadUInt16BigEndian(plaintext.Span);
 			var padded = plaintext.Slice(LenFieldSize);
 
 			if (bodyLen > padded.Length)
