@@ -21,7 +21,7 @@ namespace Noise
 			Stream stream,
 			Memory<byte> negotiationData,
 			Memory<byte> messageBody,
-			CancellationToken cancellationToken)
+			CancellationToken cancellationToken = default)
 		{
 			Exceptions.ThrowIfDisposed(disposed, nameof(Socket));
 
@@ -62,13 +62,11 @@ namespace Noise
 			await stream.WriteAsync(noiseMessage, cancellationToken).ConfigureAwait(false);
 		}
 
-		public void WriteMessage(Stream stream, ReadOnlySpan<byte> messageBody, ushort paddedLen = 0)
-		{
-			byte[] message = WriteMessage(messageBody, paddedLen);
-			stream.Write(message, 0, message.Length);
-		}
-
-		private byte[] WriteMessage(ReadOnlySpan<byte> messageBody, ushort paddedLen)
+		public async Task WriteMessage(
+			Stream stream,
+			Memory<byte> messageBody,
+			ushort paddedLen = 0,
+			CancellationToken cancellationToken = default)
 		{
 			Exceptions.ThrowIfDisposed(disposed, nameof(Socket));
 
@@ -85,20 +83,18 @@ namespace Noise
 			}
 
 			int noiseMessageLen = Math.Max(unpaddedLen, paddedLen);
-			Debug.Assert(noiseMessageLen <= UInt16.MaxValue);
+			Memory<byte> transportMessage = new byte[LenFieldSize + noiseMessageLen];
+			Memory<byte> ciphertext = transportMessage.Slice(LenFieldSize);
 
-			var transportMessage = new byte[LenFieldSize + noiseMessageLen];
-			var ciphertext = transportMessage.AsSpan().Slice(LenFieldSize);
-
-			BinaryPrimitives.WriteUInt16BigEndian(transportMessage, (ushort)noiseMessageLen);
-			BinaryPrimitives.WriteUInt16BigEndian(ciphertext, (ushort)messageBody.Length);
+			BinaryPrimitives.WriteUInt16BigEndian(transportMessage.Span, (ushort)noiseMessageLen);
+			BinaryPrimitives.WriteUInt16BigEndian(ciphertext.Span, (ushort)messageBody.Length);
 			messageBody.CopyTo(ciphertext.Slice(LenFieldSize));
 
 			var payload = ciphertext.Slice(0, noiseMessageLen - TagSize);
-			var written = transport.WriteMessage(payload, ciphertext);
+			var written = transport.WriteMessage(payload.Span, ciphertext.Span);
 			Debug.Assert(written == ciphertext.Length);
 
-			return transportMessage;
+			await stream.WriteAsync(transportMessage, cancellationToken).ConfigureAwait(false);
 		}
 
 		public byte[] ReadMessage(Stream stream)
