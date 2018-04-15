@@ -3,6 +3,7 @@ using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,6 +14,10 @@ namespace Noise
 		private const int LenFieldSize = 2;
 		private const int TagSize = 16;
 
+		private static readonly byte[] noiseSocketInit1 = Encoding.UTF8.GetBytes("NoiseSocketInit1");
+		private static readonly byte[] noiseSocketInit2 = Encoding.UTF8.GetBytes("NoiseSocketInit2");
+
+		private readonly Func<byte[], HandshakeState> initializer;
 		private HandshakeState handshakeState;
 		private Transport transport;
 		private bool disposed;
@@ -20,14 +25,13 @@ namespace Noise
 		public Socket(
 			Protocol protocol,
 			bool initiator,
-			byte[] prologue = default,
 			byte[] s = default,
 			byte[] rs = default,
 			IEnumerable<byte[]> psks = default)
 		{
 			ThrowIfNull(protocol, nameof(protocol));
 
-			handshakeState = protocol.Create(initiator, prologue, s, rs, psks);
+			initializer = prologue => protocol.Create(initiator, prologue, s, rs, psks);
 		}
 
 		public async Task WriteHandshakeMessageAsync(
@@ -38,7 +42,7 @@ namespace Noise
 		{
 			ThrowIfDisposed();
 
-			if (handshakeState == null)
+			if (this.transport != null)
 			{
 				throw new InvalidOperationException($"Cannot call {nameof(WriteHandshakeMessageAsync)} after the handshake has been completed.");
 			}
@@ -53,6 +57,9 @@ namespace Noise
 				throw new ArgumentException($"Handshake message must be less than or equal to {Protocol.MaxMessageLength} bytes in length.");
 			}
 
+			var negotiationMessage = WritePacket(negotiationData.Span);
+			InitializeHandshakeState(negotiationMessage);
+
 			var plaintext = WritePacket(messageBody.Span);
 			var ciphertext = new byte[LenFieldSize + Protocol.MaxMessageLength];
 			var (written, hash, transport) = handshakeState.WriteMessage(plaintext, ciphertext.AsSpan().Slice(LenFieldSize));
@@ -65,30 +72,32 @@ namespace Noise
 				this.transport = transport;
 			}
 
-			var negotiationMessage = WritePacket(negotiationData.Span);
-			await stream.WriteAsync(negotiationMessage, 0, negotiationMessage.Length, cancellationToken).ConfigureAwait(false);
-
 			var noiseMessage = WritePacket(ciphertext.AsReadOnlySpan().Slice(0, LenFieldSize + written));
+
+			await stream.WriteAsync(negotiationMessage, 0, negotiationMessage.Length, cancellationToken).ConfigureAwait(false);
 			await stream.WriteAsync(noiseMessage, 0, noiseMessage.Length, cancellationToken).ConfigureAwait(false);
 		}
 
-		public Task<byte[]> PeekHandshakeMessageAsync(Stream stream, CancellationToken cancellationToken = default)
+		public async Task<byte[]> ReadNegotiationMessageAsync(Stream stream, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
 
-			if (handshakeState == null)
+			if (transport != null)
 			{
-				throw new InvalidOperationException($"Cannot call {nameof(PeekHandshakeMessageAsync)} after the handshake has been completed.");
+				throw new InvalidOperationException($"Cannot call {nameof(ReadNegotiationMessageAsync)} after the handshake has been completed.");
 			}
 
-			return ReadPacketAsync(stream, cancellationToken);
+			var negotiationMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
+			InitializeHandshakeState(negotiationMessage);
+
+			return negotiationMessage;
 		}
 
 		public async Task<byte[]> ReadHandshakeMessageAsync(Stream stream, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
 
-			if (handshakeState == null)
+			if (this.transport != null)
 			{
 				throw new InvalidOperationException($"Cannot call {nameof(ReadHandshakeMessageAsync)} after the handshake has been completed.");
 			}
@@ -169,6 +178,19 @@ namespace Noise
 			var read = transport.ReadMessage(noiseMessage, noiseMessage);
 
 			return ReadPacket(noiseMessage.AsReadOnlySpan().Slice(0, read));
+		}
+
+		private void InitializeHandshakeState(byte[] negotiationMessage)
+		{
+			if (handshakeState == null)
+			{
+				byte[] prologue = new byte[noiseSocketInit1.Length + negotiationMessage.Length];
+
+				noiseSocketInit1.AsReadOnlySpan().CopyTo(prologue);
+				negotiationMessage.AsReadOnlySpan().CopyTo(prologue.AsSpan().Slice(noiseSocketInit1.Length));
+
+				handshakeState = initializer(prologue);
+			}
 		}
 
 		private void ThrowIfDisposed()
