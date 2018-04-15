@@ -25,7 +25,7 @@ namespace Noise
 			byte[] rs = default,
 			IEnumerable<byte[]> psks = default)
 		{
-			Exceptions.ThrowIfNull(protocol, nameof(protocol));
+			ThrowIfNull(protocol, nameof(protocol));
 
 			handshakeState = protocol.Create(initiator, prologue, s, rs, psks);
 		}
@@ -36,7 +36,7 @@ namespace Noise
 			Memory<byte> messageBody,
 			CancellationToken cancellationToken = default)
 		{
-			Exceptions.ThrowIfDisposed(disposed, nameof(Socket));
+			ThrowIfDisposed();
 
 			if (handshakeState == null)
 			{
@@ -74,7 +74,7 @@ namespace Noise
 
 		public Task<byte[]> PeekHandshakeMessageAsync(Stream stream, CancellationToken cancellationToken = default)
 		{
-			Exceptions.ThrowIfDisposed(disposed, nameof(Socket));
+			ThrowIfDisposed();
 
 			if (handshakeState == null)
 			{
@@ -86,7 +86,7 @@ namespace Noise
 
 		public async Task<byte[]> ReadHandshakeMessageAsync(Stream stream, CancellationToken cancellationToken = default)
 		{
-			Exceptions.ThrowIfDisposed(disposed, nameof(Socket));
+			ThrowIfDisposed();
 
 			if (handshakeState == null)
 			{
@@ -121,7 +121,7 @@ namespace Noise
 			ushort paddedLen = 0,
 			CancellationToken cancellationToken = default)
 		{
-			Exceptions.ThrowIfDisposed(disposed, nameof(Socket));
+			ThrowIfDisposed();
 
 			if (transport == null)
 			{
@@ -151,7 +151,7 @@ namespace Noise
 
 		public async Task<byte[]> ReadMessageAsync(Stream stream, CancellationToken cancellationToken = default)
 		{
-			Exceptions.ThrowIfDisposed(disposed, nameof(Socket));
+			ThrowIfDisposed();
 
 			if (transport == null)
 			{
@@ -169,6 +169,22 @@ namespace Noise
 			var read = transport.ReadMessage(noiseMessage, noiseMessage);
 
 			return ReadPacket(noiseMessage.AsReadOnlySpan().Slice(0, read));
+		}
+
+		private void ThrowIfDisposed()
+		{
+			if (disposed)
+			{
+				throw new ObjectDisposedException(nameof(Socket));
+			}
+		}
+
+		private static void ThrowIfNull(object value, string name)
+		{
+			if (value == null)
+			{
+				throw new ArgumentNullException(name);
+			}
 		}
 
 		private static byte[] WritePacket(ReadOnlySpan<byte> data)
