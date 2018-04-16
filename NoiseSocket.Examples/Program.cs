@@ -12,8 +12,8 @@ namespace Noise.Examples
 		private const int Port = 10101;
 		private const int Padding = 117;
 
-		private static readonly Protocol protocol = Protocol.Parse("Noise_XX_25519_ChaChaPoly_SHA256".AsReadOnlySpan());
-		private static readonly byte[] negotiationData = new byte[] { 0, 1, 1, 1, 3, 9 };
+		private static readonly Protocol protocol = Protocol.Parse("Noise_XX_25519_AESGCM_BLAKE2b".AsReadOnlySpan());
+		private static readonly byte[] negotiationData = new byte[] { 0, 1, 1, 2, 2, 9 };
 
 		public static void Main(string[] args)
 		{
