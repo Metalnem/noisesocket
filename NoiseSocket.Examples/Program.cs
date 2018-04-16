@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Noise;
 
-namespace NoiseSocket.Examples
+namespace Noise.Examples
 {
 	public class Program
 	{
@@ -31,7 +31,7 @@ namespace NoiseSocket.Examples
 
 				using (var stream = client.GetStream())
 				using (var keyPair = KeyPair.Generate())
-				using (var socket = new Noise.NoiseSocket(protocol, true, keyPair.PrivateKey))
+				using (var socket = new NoiseSocket(protocol, true, keyPair.PrivateKey))
 				{
 					await socket.WriteHandshakeMessageAsync(stream, negotiationData, null);
 					await socket.ReadNegotiationDataAsync(stream);
@@ -55,7 +55,7 @@ namespace NoiseSocket.Examples
 			using (var client = await listener.AcceptTcpClientAsync())
 			using (var stream = client.GetStream())
 			using (var keyPair = KeyPair.Generate())
-			using (var socket = new Noise.NoiseSocket(protocol, false, keyPair.PrivateKey))
+			using (var socket = new NoiseSocket(protocol, false, keyPair.PrivateKey))
 			{
 				await socket.ReadNegotiationDataAsync(stream);
 				await socket.ReadHandshakeMessageAsync(stream);
