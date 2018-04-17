@@ -9,6 +9,12 @@ using System.Threading.Tasks;
 
 namespace Noise
 {
+	/// <summary>
+	/// NoiseSocket provides an encoding layer for the Noise Protocol
+	/// Framework. NoiseSocket can encode Noise messages and associated
+	/// negotiation data into a form suitable for transmission over
+	/// reliable, stream-based protocols such as TCP.
+	/// </summary>
 	public sealed class NoiseSocket : IDisposable
 	{
 		private const int LenFieldSize = 2;
@@ -22,6 +28,17 @@ namespace Noise
 		private Transport transport;
 		private bool disposed;
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="NoiseSocket"/> class.
+		/// </summary>
+		/// <param name="protocol">A concrete Noise protocol (e.g. Noise_XX_25519_AESGCM_BLAKE2b).</param>
+		/// <param name="initiator">A boolean indicating the initiator or responder role.</param>
+		/// <param name="s">The local static private key (optional).</param>
+		/// <param name="rs">The remote party's static public key (optional).</param>
+		/// <param name="psks">The collection of zero or more 32-byte pre-shared secret keys.</param>
+		/// <exception cref="ArgumentNullException">
+		/// Thrown if the <paramref name="protocol"/> is null.
+		/// </exception>
 		public NoiseSocket(
 			Protocol protocol,
 			bool initiator,
@@ -259,6 +276,10 @@ namespace Noise
 			return data;
 		}
 
+		/// <summary>
+		/// Releases all resources used by the current
+		/// instance of the <see cref="NoiseSocket"/> class.
+		/// </summary>
 		public void Dispose()
 		{
 			if (!disposed)
