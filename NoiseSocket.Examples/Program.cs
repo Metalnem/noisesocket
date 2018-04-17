@@ -33,10 +33,10 @@ namespace Noise.Examples
 				using (var keyPair = KeyPair.Generate())
 				using (var socket = new NoiseSocket(protocol, true, keyPair.PrivateKey))
 				{
-					await socket.WriteHandshakeMessageAsync(stream, negotiationData, null);
+					await socket.WriteHandshakeMessageAsync(stream, negotiationData);
 					await socket.ReadNegotiationDataAsync(stream);
 					await socket.ReadHandshakeMessageAsync(stream);
-					await socket.WriteHandshakeMessageAsync(stream, null, null);
+					await socket.WriteHandshakeMessageAsync(stream, null);
 
 					var request = Encoding.UTF8.GetBytes("I'm cooking MC's like a pound of bacon");
 					await socket.WriteMessageAsync(stream, request, Padding);
@@ -59,7 +59,7 @@ namespace Noise.Examples
 			{
 				await socket.ReadNegotiationDataAsync(stream);
 				await socket.ReadHandshakeMessageAsync(stream);
-				await socket.WriteHandshakeMessageAsync(stream, null, null);
+				await socket.WriteHandshakeMessageAsync(stream, null);
 				await socket.ReadNegotiationDataAsync(stream);
 				await socket.ReadHandshakeMessageAsync(stream);
 

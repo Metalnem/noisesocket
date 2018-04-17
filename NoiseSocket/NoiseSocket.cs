@@ -54,7 +54,7 @@ namespace Noise
 		public async Task WriteHandshakeMessageAsync(
 			Stream stream,
 			Memory<byte> negotiationData,
-			Memory<byte> messageBody,
+			Memory<byte> messageBody = default,
 			CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
