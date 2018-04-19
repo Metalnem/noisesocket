@@ -184,7 +184,7 @@ namespace Noise
 
 			var noiseMessageLength = Math.Max(unpaddedLength, paddedLength);
 			var transportMessage = new byte[LenFieldSize + noiseMessageLength];
-			var ciphertext = new Memory<byte>(transportMessage).Slice(LenFieldSize);
+			var ciphertext = transportMessage.AsMemory(LenFieldSize);
 
 			BinaryPrimitives.WriteUInt16BigEndian(transportMessage.AsSpan(), (ushort)noiseMessageLength);
 			BinaryPrimitives.WriteUInt16BigEndian(ciphertext.Span, (ushort)messageBody.Length);
