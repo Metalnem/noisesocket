@@ -19,7 +19,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Noise.NET" Version="0.9.3-rc" />
+    <PackageReference Include="Noise.NET" Version="0.9.4-rc" />
   </ItemGroup>
 
 </Project>
