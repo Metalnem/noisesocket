@@ -56,6 +56,7 @@ namespace Noise
 			Stream stream,
 			Memory<byte> negotiationData,
 			Memory<byte> messageBody = default,
+			ushort paddedLength = default,
 			CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
@@ -165,7 +166,7 @@ namespace Noise
 		public Task WriteMessageAsync(
 			Stream stream,
 			Memory<byte> messageBody,
-			ushort paddedLength = 0,
+			ushort paddedLength = default,
 			CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
@@ -291,7 +292,7 @@ namespace Noise
 			byte[] lengthBuffer = new byte[LenFieldSize];
 			await stream.ReadAsync(lengthBuffer, 0, lengthBuffer.Length, cancellationToken).ConfigureAwait(false);
 
-			var data = new byte[BinaryPrimitives.ReadUInt16BigEndian(lengthBuffer)];
+			byte[] data = new byte[BinaryPrimitives.ReadUInt16BigEndian(lengthBuffer)];
 			await stream.ReadAsync(data, 0, data.Length, cancellationToken).ConfigureAwait(false);
 
 			return data;
