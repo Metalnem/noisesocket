@@ -237,8 +237,7 @@ namespace Noise
 			var ciphertext = transportMessage.AsMemory(LenFieldSize);
 
 			BinaryPrimitives.WriteUInt16BigEndian(transportMessage.AsSpan(), (ushort)noiseMessageLength);
-			BinaryPrimitives.WriteUInt16BigEndian(ciphertext.Span, (ushort)messageBody.Length);
-			messageBody.CopyTo(ciphertext.Slice(LenFieldSize));
+			WritePacket(messageBody.Span, ciphertext.Span);
 
 			var payload = ciphertext.Slice(0, noiseMessageLength - TagSize);
 			var written = transport.WriteMessage(payload.Span, ciphertext.Span);
