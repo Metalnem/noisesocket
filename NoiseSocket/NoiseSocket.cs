@@ -134,11 +134,13 @@ namespace Noise
 		/// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
 		/// <returns>The negotiation data.</returns>
 		/// <exception cref="ObjectDisposedException">
-		/// Thrown if the current instance has already been disposed.
+		/// Thrown if either the current instance, or the input stream has already been disposed.
 		/// </exception>
 		/// <exception cref="InvalidOperationException">
 		/// Thrown if the handshake has already been completed.
 		/// </exception>
+		/// <exception cref="IOException">An I/O error occurs.</exception>
+		/// <exception cref="NotSupportedException">The stream does not support reading.</exception>
 		public async Task<byte[]> ReadNegotiationDataAsync(CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
@@ -311,10 +313,10 @@ namespace Noise
 
 		private static async Task<byte[]> ReadPacketAsync(Stream stream, CancellationToken cancellationToken = default)
 		{
-			byte[] lengthBuffer = new byte[LenFieldSize];
-			await stream.ReadAsync(lengthBuffer, 0, lengthBuffer.Length, cancellationToken).ConfigureAwait(false);
+			byte[] length = new byte[LenFieldSize];
+			await stream.ReadAsync(length, 0, length.Length, cancellationToken).ConfigureAwait(false);
 
-			byte[] data = new byte[BinaryPrimitives.ReadUInt16BigEndian(lengthBuffer)];
+			byte[] data = new byte[BinaryPrimitives.ReadUInt16BigEndian(length)];
 			await stream.ReadAsync(data, 0, data.Length, cancellationToken).ConfigureAwait(false);
 
 			return data;
