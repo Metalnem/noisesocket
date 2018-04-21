@@ -139,8 +139,8 @@ namespace Noise
 		/// <exception cref="InvalidOperationException">
 		/// Thrown if the handshake has already been completed.
 		/// </exception>
-		/// <exception cref="IOException">An I/O error occurs.</exception>
-		/// <exception cref="NotSupportedException">The stream does not support reading.</exception>
+		/// <exception cref="IOException">Thrown if an I/O error occurs.</exception>
+		/// <exception cref="NotSupportedException">Thrown if the stream does not support reading.</exception>
 		public async Task<byte[]> ReadNegotiationDataAsync(CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
@@ -220,6 +220,27 @@ namespace Noise
 			return stream.WriteAsync(transportMessage, 0, transportMessage.Length, cancellationToken);
 		}
 
+		/// <summary>
+		/// Asynchronously reads the transport message from the input stream.
+		/// </summary>
+		/// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+		/// <returns>The decrypted message body.</returns>
+		/// <exception cref="ObjectDisposedException">
+		/// Thrown if the current instance has already been disposed.
+		/// </exception>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown if the handshake has not yet been completed, or the
+		/// initiator has attempted to read a message from a one-way stream.
+		/// </exception>
+		/// <exception cref="ArgumentException">
+		/// Thrown if the message was greater than <see cref="Protocol.MaxMessageLength"/>
+		/// bytes in length, or the decrypted message body length was invalid.
+		/// </exception>
+		/// <exception cref="System.Security.Cryptography.CryptographicException">
+		/// Thrown if the decryption of the message has failed.
+		/// </exception>
+		/// <exception cref="IOException">Thrown if an I/O error occurs.</exception>
+		/// <exception cref="NotSupportedException">Thrown if the stream does not support reading.</exception>
 		public async Task<byte[]> ReadMessageAsync(CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
@@ -295,10 +316,7 @@ namespace Noise
 
 		private static byte[] ReadPacket(ReadOnlySpan<byte> packet)
 		{
-			if (packet.Length < LenFieldSize)
-			{
-				throw new ArgumentException($"Packet must be greater than or equal to {LenFieldSize} bytes in length.");
-			}
+			Debug.Assert(packet.Length <= UInt16.MaxValue);
 
 			var length = BinaryPrimitives.ReadUInt16BigEndian(packet);
 			var data = packet.Slice(LenFieldSize);
