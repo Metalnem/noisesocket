@@ -159,6 +159,26 @@ namespace Noise
 			return negotiationData;
 		}
 
+		/// <summary>
+		/// Asynchronously reads the handshake message from the input stream.
+		/// </summary>
+		/// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+		/// <returns>
+		/// A task that represents the asynchronous read operation.
+		/// The result of the task contains the decrypted message body.
+		/// </returns>
+		/// <exception cref="ObjectDisposedException">
+		/// Thrown if the current instance has already been disposed.
+		/// </exception>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown if the call to <see cref="WriteHandshakeMessageAsync"/>
+		/// was expected or the handshake has already been completed.
+		/// </exception>
+		/// <exception cref="System.Security.Cryptography.CryptographicException">
+		/// Thrown if the decryption of the message has failed.
+		/// </exception>
+		/// <exception cref="IOException">Thrown if an I/O error occurs.</exception>
+		/// <exception cref="NotSupportedException">Thrown if the stream does not support reading.</exception>
 		public async Task<byte[]> ReadHandshakeMessageAsync(CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
@@ -169,13 +189,6 @@ namespace Noise
 			}
 
 			var noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
-			var minSize = LenFieldSize + TagSize;
-
-			if (noiseMessage.Length < minSize)
-			{
-				throw new ArgumentException($"Handshake message must be greater than or equal to {minSize} bytes in length.");
-			}
-
 			var plaintext = new byte[noiseMessage.Length];
 			var (read, hash, transport) = handshakeState.ReadMessage(noiseMessage, plaintext);
 
