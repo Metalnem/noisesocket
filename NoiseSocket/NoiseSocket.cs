@@ -64,6 +64,32 @@ namespace Noise
 			this.leaveOpen = leaveOpen;
 		}
 
+		/// <summary>
+		/// Asynchronously writes the negotiation data and the handshake message to the input stream.
+		/// </summary>
+		/// <param name="negotiationData">The negotiation data.</param>
+		/// <param name="messageBody">The message body to encrypt.</param>
+		/// <param name="paddedLength">
+		/// If this message has an encrypted payload and the length of the
+		/// <paramref name="messageBody"/> is less than <paramref name="paddedLength"/>,
+		/// <paramref name="messageBody"/> is padded to make its
+		/// length equal to <paramref name="paddedLength"/>.
+		/// </param>
+		/// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+		/// <returns>A task that represents the asynchronous write operation.</returns>
+		/// <exception cref="ObjectDisposedException">
+		/// Thrown if either the current instance, or the output stream has already been disposed.
+		/// </exception>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown if the call to <see cref="ReadHandshakeMessageAsync"/> was expected
+		/// or the handshake has already been completed.
+		/// </exception>
+		/// <exception cref="ArgumentException">
+		/// Thrown if the Noise message was greater than
+		/// <see cref="Protocol.MaxMessageLength"/> bytes in length.
+		/// </exception>
+		/// <exception cref="IOException">Thrown if an I/O error occurs.</exception>
+		/// <exception cref="NotSupportedException">Thrown if the stream does not support reading.</exception>
 		public async Task WriteHandshakeMessageAsync(
 			Memory<byte> negotiationData,
 			Memory<byte> messageBody = default,
@@ -168,7 +194,7 @@ namespace Noise
 		/// The result of the task contains the decrypted message body.
 		/// </returns>
 		/// <exception cref="ObjectDisposedException">
-		/// Thrown if the current instance has already been disposed.
+		/// Thrown if either the current instance, or the input stream has already been disposed.
 		/// </exception>
 		/// <exception cref="InvalidOperationException">
 		/// Thrown if the call to <see cref="WriteHandshakeMessageAsync"/>
@@ -208,8 +234,9 @@ namespace Noise
 		/// </summary>
 		/// <param name="messageBody">The message body to encrypt.</param>
 		/// <param name="paddedLength">
-		/// If length of the <paramref name="messageBody"/> is less than <paramref name="paddedLength"/>,
-		/// it is padded to make its length equal to <paramref name="paddedLength"/>.
+		/// If the length of the <paramref name="messageBody"/> is less than
+		/// <paramref name="paddedLength"/>, <paramref name="messageBody"/>
+		/// is padded to make its length equal to <paramref name="paddedLength"/>.
 		/// </param>
 		/// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
 		/// <returns>A task that represents the asynchronous write operation.</returns>
@@ -267,7 +294,7 @@ namespace Noise
 		/// The result of the task contains the decrypted message body.
 		/// </returns>
 		/// <exception cref="ObjectDisposedException">
-		/// Thrown if the current instance has already been disposed.
+		/// Thrown if either the current instance, or the input stream has already been disposed.
 		/// </exception>
 		/// <exception cref="InvalidOperationException">
 		/// Thrown if the handshake has not yet been completed, or the
