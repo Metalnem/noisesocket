@@ -128,6 +128,17 @@ namespace Noise
 			}
 		}
 
+		/// <summary>
+		/// Asynchronously reads the negotiation data from the input stream.
+		/// </summary>
+		/// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+		/// <returns>The negotiation data.</returns>
+		/// <exception cref="ObjectDisposedException">
+		/// Thrown if the current instance has already been disposed.
+		/// </exception>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown if the handshake has already been completed.
+		/// </exception>
 		public async Task<byte[]> ReadNegotiationDataAsync(CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
