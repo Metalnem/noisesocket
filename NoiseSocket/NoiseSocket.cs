@@ -132,7 +132,10 @@ namespace Noise
 		/// Asynchronously reads the negotiation data from the input stream.
 		/// </summary>
 		/// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
-		/// <returns>The negotiation data.</returns>
+		/// <returns>
+		/// A task that represents the asynchronous read operation.
+		/// The result of the task contains the negotiation data.
+		/// </returns>
 		/// <exception cref="ObjectDisposedException">
 		/// Thrown if either the current instance, or the input stream has already been disposed.
 		/// </exception>
@@ -187,6 +190,29 @@ namespace Noise
 			return ReadPacket(plaintext.AsSpan(0, read));
 		}
 
+		/// <summary>
+		/// Asynchronously writes the transport message to the input stream.
+		/// </summary>
+		/// <param name="messageBody">The message body to encrypt.</param>
+		/// <param name="paddedLength">
+		/// If length of the <paramref name="messageBody"/> is less than <paramref name="paddedLength"/>,
+		/// it is padded to make its length equal to <paramref name="paddedLength"/>.
+		/// </param>
+		/// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+		/// <returns>A task that represents the asynchronous write operation.</returns>
+		/// <exception cref="ObjectDisposedException">
+		/// Thrown if either the current instance, or the output stream has already been disposed.
+		/// </exception>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown if the handshake has not yet been completed, or the
+		/// responder has attempted to write a message to a one-way stream.
+		/// </exception>
+		/// <exception cref="ArgumentException">
+		/// Thrown if the encrypted payload was greater than
+		/// <see cref="Protocol.MaxMessageLength"/> bytes in length.
+		/// </exception>
+		/// <exception cref="IOException">Thrown if an I/O error occurs.</exception>
+		/// <exception cref="NotSupportedException">Thrown if the stream does not support writing.</exception>
 		public Task WriteMessageAsync(
 			Memory<byte> messageBody,
 			ushort paddedLength = default,
@@ -199,14 +225,14 @@ namespace Noise
 				throw new InvalidOperationException($"Cannot call {nameof(WriteMessageAsync)} before the handshake has been completed.");
 			}
 
-			int unpaddedLength = LenFieldSize + messageBody.Length + TagSize;
+			int length = Math.Max(messageBody.Length, paddedLength);
+			int noiseMessageLength = LenFieldSize + length + TagSize;
 
-			if (unpaddedLength > Protocol.MaxMessageLength)
+			if (noiseMessageLength > Protocol.MaxMessageLength)
 			{
 				throw new ArgumentException($"Transport message must be less than or equal to {Protocol.MaxMessageLength} bytes in length.");
 			}
 
-			var noiseMessageLength = Math.Max(unpaddedLength, paddedLength);
 			var transportMessage = new byte[LenFieldSize + noiseMessageLength];
 			var ciphertext = transportMessage.AsMemory(LenFieldSize);
 
@@ -224,7 +250,10 @@ namespace Noise
 		/// Asynchronously reads the transport message from the input stream.
 		/// </summary>
 		/// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
-		/// <returns>The decrypted message body.</returns>
+		/// <returns>
+		/// A task that represents the asynchronous read operation.
+		/// The result of the task contains the decrypted message body.
+		/// </returns>
 		/// <exception cref="ObjectDisposedException">
 		/// Thrown if the current instance has already been disposed.
 		/// </exception>
