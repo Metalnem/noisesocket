@@ -48,11 +48,7 @@ namespace Noise
 		/// Thrown if either <paramref name="protocol"/>,
 		/// <paramref name="config"/>, or <paramref name="stream"/> is null.
 		/// </exception>
-		public NoiseSocket(
-			Protocol protocol,
-			ProtocolConfig config,
-			Stream stream,
-			bool leaveOpen = false)
+		public NoiseSocket(Protocol protocol, ProtocolConfig config, Stream stream, bool leaveOpen = false)
 		{
 			ThrowIfNull(protocol, nameof(protocol));
 			ThrowIfNull(config, nameof(config));
