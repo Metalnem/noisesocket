@@ -30,18 +30,22 @@ namespace Noise.Examples
 
 				using (var stream = client.GetStream())
 				using (var keyPair = KeyPair.Generate())
-				using (var socket = new NoiseSocket(protocol, true, keyPair.PrivateKey))
 				{
-					await socket.WriteHandshakeMessageAsync(stream, negotiationData);
-					await socket.ReadNegotiationDataAsync(stream);
-					await socket.ReadHandshakeMessageAsync(stream);
-					await socket.WriteHandshakeMessageAsync(stream, null);
+					var config = new ProtocolConfig(initiator: true, s: keyPair.PrivateKey);
 
-					var request = Encoding.UTF8.GetBytes("I'm cooking MC's like a pound of bacon");
-					await socket.WriteMessageAsync(stream, request, Padding);
+					using (var socket = new NoiseSocket(protocol, config, stream))
+					{
+						await socket.WriteHandshakeMessageAsync(negotiationData);
+						await socket.ReadNegotiationDataAsync();
+						await socket.ReadHandshakeMessageAsync();
+						await socket.WriteHandshakeMessageAsync(null);
 
-					var response = await socket.ReadMessageAsync(stream);
-					Console.WriteLine(Encoding.UTF8.GetString(response));
+						var request = Encoding.UTF8.GetBytes("I'm cooking MC's like a pound of bacon");
+						await socket.WriteMessageAsync(request, Padding);
+
+						var response = await socket.ReadMessageAsync();
+						Console.WriteLine(Encoding.UTF8.GetString(response));
+					}
 				}
 			}
 		}
@@ -54,16 +58,20 @@ namespace Noise.Examples
 			using (var client = await listener.AcceptTcpClientAsync())
 			using (var stream = client.GetStream())
 			using (var keyPair = KeyPair.Generate())
-			using (var socket = new NoiseSocket(protocol, false, keyPair.PrivateKey))
 			{
-				await socket.ReadNegotiationDataAsync(stream);
-				await socket.ReadHandshakeMessageAsync(stream);
-				await socket.WriteHandshakeMessageAsync(stream, null);
-				await socket.ReadNegotiationDataAsync(stream);
-				await socket.ReadHandshakeMessageAsync(stream);
+				var config = new ProtocolConfig(initiator: false, s: keyPair.PrivateKey);
 
-				var request = await socket.ReadMessageAsync(stream);
-				await socket.WriteMessageAsync(stream, request, Padding);
+				using (var socket = new NoiseSocket(protocol, config, stream))
+				{
+					await socket.ReadNegotiationDataAsync();
+					await socket.ReadHandshakeMessageAsync();
+					await socket.WriteHandshakeMessageAsync(null);
+					await socket.ReadNegotiationDataAsync();
+					await socket.ReadHandshakeMessageAsync();
+
+					var request = await socket.ReadMessageAsync();
+					await socket.WriteMessageAsync(request, Padding);
+				}
 			}
 
 			listener.Stop();

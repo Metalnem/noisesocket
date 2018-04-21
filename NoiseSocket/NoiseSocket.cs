@@ -1,7 +1,6 @@
 using System;
 using System.Buffers;
 using System.Buffers.Binary;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -24,7 +23,11 @@ namespace Noise
 		private static readonly byte[] noiseSocketInit1 = Encoding.UTF8.GetBytes("NoiseSocketInit1");
 		private static readonly byte[] noiseSocketInit2 = Encoding.UTF8.GetBytes("NoiseSocketInit2");
 
-		private readonly Func<byte[], HandshakeState> initializer;
+		private readonly Protocol protocol;
+		private readonly ProtocolConfig config;
+		private readonly Stream stream;
+		private readonly bool leaveOpen;
+
 		private HandshakeState handshakeState;
 		private Transport transport;
 		private bool disposed;
@@ -33,27 +36,35 @@ namespace Noise
 		/// Initializes a new instance of the <see cref="NoiseSocket"/> class.
 		/// </summary>
 		/// <param name="protocol">A concrete Noise protocol (e.g. Noise_XX_25519_AESGCM_BLAKE2b).</param>
-		/// <param name="initiator">A boolean indicating the initiator or responder role.</param>
-		/// <param name="s">The local static private key (optional).</param>
-		/// <param name="rs">The remote party's static public key (optional).</param>
-		/// <param name="psks">The collection of zero or more 32-byte pre-shared secret keys.</param>
+		/// <param name="config">
+		/// A set of parameters used to instantiate an initial <see cref="HandshakeState"/>.
+		/// </param>
+		/// <param name="stream">The stream for reading and writing encoded protocol messages.</param>
+		/// <param name="leaveOpen">
+		/// True to leave the stream open after the
+		/// <see cref="NoiseSocket"/> object is disposed, false otherwise.
+		/// </param>
 		/// <exception cref="ArgumentNullException">
-		/// Thrown if the <paramref name="protocol"/> is null.
+		/// Thrown if either <paramref name="protocol"/>,
+		/// <paramref name="config"/>, or <paramref name="stream"/> is null.
 		/// </exception>
 		public NoiseSocket(
 			Protocol protocol,
-			bool initiator,
-			byte[] s = default,
-			byte[] rs = default,
-			IEnumerable<byte[]> psks = default)
+			ProtocolConfig config,
+			Stream stream,
+			bool leaveOpen = false)
 		{
 			ThrowIfNull(protocol, nameof(protocol));
+			ThrowIfNull(config, nameof(config));
+			ThrowIfNull(stream, nameof(stream));
 
-			initializer = prologue => protocol.Create(initiator, prologue, s, rs, psks);
+			this.protocol = protocol;
+			this.config = config;
+			this.stream = stream;
+			this.leaveOpen = leaveOpen;
 		}
 
 		public async Task WriteHandshakeMessageAsync(
-			Stream stream,
 			Memory<byte> negotiationData,
 			Memory<byte> messageBody = default,
 			ushort paddedLength = default,
@@ -117,7 +128,7 @@ namespace Noise
 			}
 		}
 
-		public async Task<byte[]> ReadNegotiationDataAsync(Stream stream, CancellationToken cancellationToken = default)
+		public async Task<byte[]> ReadNegotiationDataAsync(CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
 
@@ -132,7 +143,7 @@ namespace Noise
 			return negotiationData;
 		}
 
-		public async Task<byte[]> ReadHandshakeMessageAsync(Stream stream, CancellationToken cancellationToken = default)
+		public async Task<byte[]> ReadHandshakeMessageAsync(CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
 
@@ -164,7 +175,6 @@ namespace Noise
 		}
 
 		public Task WriteMessageAsync(
-			Stream stream,
 			Memory<byte> messageBody,
 			ushort paddedLength = default,
 			CancellationToken cancellationToken = default)
@@ -197,7 +207,7 @@ namespace Noise
 			return stream.WriteAsync(transportMessage, 0, transportMessage.Length, cancellationToken);
 		}
 
-		public async Task<byte[]> ReadMessageAsync(Stream stream, CancellationToken cancellationToken = default)
+		public async Task<byte[]> ReadMessageAsync(CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
 
@@ -228,7 +238,8 @@ namespace Noise
 				noiseSocketInit1.AsSpan().CopyTo(prologue);
 				WritePacket(negotiationMessage, prologue.AsSpan(noiseSocketInit1.Length));
 
-				handshakeState = initializer(prologue);
+				config.Prologue = prologue;
+				handshakeState = protocol.Create(config);
 			}
 		}
 
@@ -306,8 +317,14 @@ namespace Noise
 		{
 			if (!disposed)
 			{
+				if (!leaveOpen)
+				{
+					stream.Dispose();
+				}
+
 				handshakeState?.Dispose();
 				transport?.Dispose();
+
 				disposed = true;
 			}
 		}
