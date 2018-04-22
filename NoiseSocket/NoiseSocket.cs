@@ -87,8 +87,8 @@ namespace Noise
 		/// or the handshake has already been completed.
 		/// </exception>
 		/// <exception cref="ArgumentException">
-		/// Thrown if the Noise message was greater than
-		/// <see cref="Protocol.MaxMessageLength"/> bytes in length.
+		/// Thrown if either the negotiation data, or the Noise message was greater
+		/// than <see cref="Protocol.MaxMessageLength"/> bytes in length.
 		/// </exception>
 		/// <exception cref="IOException">Thrown if an I/O error occurs.</exception>
 		/// <exception cref="NotSupportedException">Thrown if the stream does not support reading.</exception>
@@ -162,6 +162,45 @@ namespace Noise
 			{
 				pool.Return(buffer);
 			}
+		}
+
+		/// <summary>
+		/// Asynchronously writes the negotiation data and the empty handshake message to the input stream.
+		/// </summary>
+		/// <param name="negotiationData">The negotiation data.</param>
+		/// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+		/// <returns>A task that represents the asynchronous write operation.</returns>
+		/// <exception cref="ObjectDisposedException">
+		/// Thrown if either the current instance, or the output stream has already been disposed.
+		/// </exception>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown if the handshake has already been completed.
+		/// </exception>
+		/// <exception cref="ArgumentException">
+		/// Thrown if the negotiation data was greater than
+		/// <see cref="Protocol.MaxMessageLength"/> bytes in length.
+		/// </exception>
+		/// <exception cref="IOException">Thrown if an I/O error occurs.</exception>
+		/// <exception cref="NotSupportedException">Thrown if the stream does not support reading.</exception>
+		public async Task WriteEmptyHandshakeMessageAsync(Memory<byte> negotiationData, CancellationToken cancellationToken = default)
+		{
+			ThrowIfDisposed();
+
+			if (transport != null)
+			{
+				string error = $"Cannot call {nameof(WriteEmptyHandshakeMessageAsync)} after the handshake has been completed.";
+				throw new InvalidOperationException(error);
+			}
+
+			if (negotiationData.Length > Protocol.MaxMessageLength)
+			{
+				throw new ArgumentException($"Negotiation data must be less than or equal to {Protocol.MaxMessageLength} bytes in length.");
+			}
+
+			var message = new byte[LenFieldSize + negotiationData.Length + LenFieldSize];
+			WritePacket(negotiationData.Span, message);
+
+			await stream.WriteAsync(message, 0, message.Length, cancellationToken).ConfigureAwait(false);
 		}
 
 		/// <summary>
