@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,6 +31,7 @@ namespace Noise
 
 		private HandshakeState handshakeState;
 		private Transport transport;
+		private bool isNextMessageEncrypted;
 		private bool disposed;
 
 		/// <summary>
@@ -58,6 +60,8 @@ namespace Noise
 			this.config = config;
 			this.stream = stream;
 			this.leaveOpen = leaveOpen;
+
+			isNextMessageEncrypted = IsInitialMessageEncrypted(protocol);
 		}
 
 		/// <summary>
@@ -402,6 +406,29 @@ namespace Noise
 			await stream.ReadAsync(data, 0, data.Length, cancellationToken).ConfigureAwait(false);
 
 			return data;
+		}
+
+		private static bool IsInitialMessageEncrypted(Protocol protocol)
+		{
+			var psks = PatternModifiers.Psk0 | PatternModifiers.Psk1 | PatternModifiers.Psk2 | PatternModifiers.Psk3;
+
+			if ((protocol.Modifiers & psks) != 0)
+			{
+				return true;
+			}
+
+			foreach (var token in protocol.HandshakePattern.Patterns.First().Tokens)
+			{
+				switch (token)
+				{
+					case Token.EE:
+					case Token.ES:
+					case Token.SE:
+					case Token.SS: return true;
+				}
+			}
+
+			return false;
 		}
 
 		/// <summary>
