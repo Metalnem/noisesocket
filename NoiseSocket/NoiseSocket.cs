@@ -129,8 +129,16 @@ namespace Noise
 
 			try
 			{
-				var plaintext = WritePacket(messageBody.Span);
-				var (written, hash, transport) = handshakeState.WriteMessage(plaintext, buffer.AsSpan(negotiationLength + LenFieldSize));
+				Memory<byte> plaintext = messageBody;
+
+				if (isNextMessageEncrypted)
+				{
+					plaintext = new byte[LenFieldSize + Math.Max(messageBody.Length, paddedLength)];
+					WritePacket(messageBody.Span, plaintext.Span);
+				}
+
+				var (written, hash, transport) = handshakeState.WriteMessage(plaintext.Span, buffer.AsSpan(negotiationLength + LenFieldSize));
+				isNextMessageEncrypted = true;
 
 				if (transport != null)
 				{
@@ -375,17 +383,6 @@ namespace Noise
 
 			BinaryPrimitives.WriteUInt16BigEndian(message, (ushort)length);
 			data.CopyTo(message.Slice(LenFieldSize));
-		}
-
-		private static byte[] WritePacket(ReadOnlySpan<byte> data)
-		{
-			int length = data.Length;
-			Debug.Assert(length < UInt16.MaxValue);
-
-			byte[] message = new byte[LenFieldSize + length];
-			WritePacket(data, message);
-
-			return message;
 		}
 
 		private static byte[] ReadPacket(ReadOnlySpan<byte> packet)
