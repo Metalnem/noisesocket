@@ -21,6 +21,7 @@ namespace Noise
 		private const int LenFieldSize = 2;
 		private const int TagSize = 16;
 
+		private static readonly byte[] empty = new byte[0];
 		private static readonly byte[] noiseSocketInit1 = Encoding.UTF8.GetBytes("NoiseSocketInit1");
 		private static readonly byte[] noiseSocketInit2 = Encoding.UTF8.GetBytes("NoiseSocketInit2");
 		private static readonly byte[] noiseSocketInit3 = Encoding.UTF8.GetBytes("NoiseSocketInit3");
@@ -209,6 +210,9 @@ namespace Noise
 		/// Thrown if the call to <see cref="WriteHandshakeMessageAsync"/>
 		/// was expected or the handshake has already been completed.
 		/// </exception>
+		/// <exception cref="ArgumentException">
+		/// Thrown if the decrypted message body length was invalid.
+		/// </exception>
 		/// <exception cref="System.Security.Cryptography.CryptographicException">
 		/// Thrown if the decryption of the message has failed.
 		/// </exception>
@@ -224,6 +228,12 @@ namespace Noise
 			}
 
 			var noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
+
+			if (noiseMessage.Length == 0)
+			{
+				return empty;
+			}
+
 			var plaintext = new byte[noiseMessage.Length];
 			var (read, hash, transport) = handshakeState.ReadMessage(noiseMessage, plaintext);
 
@@ -316,8 +326,7 @@ namespace Noise
 		/// initiator has attempted to read a message from a one-way stream.
 		/// </exception>
 		/// <exception cref="ArgumentException">
-		/// Thrown if the message was greater than <see cref="Protocol.MaxMessageLength"/>
-		/// bytes in length, or the decrypted message body length was invalid.
+		/// Thrown if the decrypted message body length was invalid.
 		/// </exception>
 		/// <exception cref="System.Security.Cryptography.CryptographicException">
 		/// Thrown if the decryption of the message has failed.
