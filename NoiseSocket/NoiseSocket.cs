@@ -255,6 +255,33 @@ namespace Noise
 		}
 
 		/// <summary>
+		/// Asynchronously consumes the encoded message from the input stream.
+		/// </summary>
+		/// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+		/// <returns>
+		/// A task that represents the asynchronous read operation.
+		/// </returns>
+		/// <exception cref="ObjectDisposedException">
+		/// Thrown if either the current instance, or the input stream has already been disposed.
+		/// </exception>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown if the handshake has already been completed.
+		/// </exception>
+		/// <exception cref="IOException">Thrown if an I/O error occurs.</exception>
+		/// <exception cref="NotSupportedException">Thrown if the stream does not support reading.</exception>
+		public async Task DiscardMessageAsync(CancellationToken cancellationToken = default)
+		{
+			ThrowIfDisposed();
+
+			if (transport != null)
+			{
+				throw new InvalidOperationException($"Cannot call {nameof(DiscardMessageAsync)} after the handshake has been completed.");
+			}
+
+			await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
+		}
+
+		/// <summary>
 		/// Asynchronously writes the transport message to the input stream.
 		/// </summary>
 		/// <param name="messageBody">The message body to encrypt.</param>
