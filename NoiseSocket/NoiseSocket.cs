@@ -92,6 +92,10 @@ namespace Noise
 		/// </exception>
 		/// <exception cref="IOException">Thrown if an I/O error occurs.</exception>
 		/// <exception cref="NotSupportedException">Thrown if the stream does not support reading.</exception>
+		/// <remarks>
+		/// This method can also throw all exceptions that <see cref="Protocol.Create(ProtocolConfig)"/>
+		/// method can throw. See the <see cref="Protocol"/> class documentation for more details.
+		/// </remarks>
 		public async Task WriteHandshakeMessageAsync(
 			Memory<byte> negotiationData,
 			Memory<byte> messageBody = default,
@@ -257,6 +261,10 @@ namespace Noise
 		/// </exception>
 		/// <exception cref="IOException">Thrown if an I/O error occurs.</exception>
 		/// <exception cref="NotSupportedException">Thrown if the stream does not support reading.</exception>
+		/// <remarks>
+		/// This method can also throw all exceptions that <see cref="Protocol.Create(ProtocolConfig)"/>
+		/// method can throw. See the <see cref="Protocol"/> class documentation for more details.
+		/// </remarks>
 		public async Task<byte[]> ReadHandshakeMessageAsync(CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
