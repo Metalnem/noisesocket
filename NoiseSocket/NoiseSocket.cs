@@ -23,6 +23,7 @@ namespace Noise
 
 		private static readonly byte[] noiseSocketInit1 = Encoding.UTF8.GetBytes("NoiseSocketInit1");
 		private static readonly byte[] noiseSocketInit2 = Encoding.UTF8.GetBytes("NoiseSocketInit2");
+		private static readonly byte[] noiseSocketInit3 = Encoding.UTF8.GetBytes("NoiseSocketInit3");
 
 		private readonly Protocol protocol;
 		private readonly ProtocolConfig config;
@@ -347,15 +348,38 @@ namespace Noise
 
 		private void InitializeHandshakeState(ReadOnlySpan<byte> negotiationMessage)
 		{
-			if (handshakeState == null)
+			if (handshakeState != null)
 			{
-				byte[] prologue = new byte[noiseSocketInit1.Length + LenFieldSize + negotiationMessage.Length];
+				return;
+			}
 
-				noiseSocketInit1.AsSpan().CopyTo(prologue);
-				WritePacket(negotiationMessage, prologue.AsSpan(noiseSocketInit1.Length));
+			var prologue = config.Prologue.AsSpan();
+			var length = noiseSocketInit1.Length + LenFieldSize + negotiationMessage.Length + prologue.Length;
 
-				config.Prologue = prologue;
+			// Prevent the buffer from going to the LOH (it may be greater than 85000 bytes).
+			var pool = ArrayPool<byte>.Shared;
+			var buffer = pool.Rent(length);
+
+			try
+			{
+				noiseSocketInit1.AsSpan().CopyTo(buffer);
+				WritePacket(negotiationMessage, buffer.AsSpan(noiseSocketInit1.Length));
+				prologue.CopyTo(buffer.AsSpan(length - prologue.Length));
+
+				var config = new ProtocolConfig
+				{
+					Initiator = this.config.Initiator,
+					Prologue = buffer,
+					LocalStatic = this.config.LocalStatic,
+					RemoteStatic = this.config.RemoteStatic,
+					PreSharedKeys = this.config.PreSharedKeys
+				};
+
 				handshakeState = protocol.Create(config);
+			}
+			finally
+			{
+				pool.Return(buffer);
 			}
 		}
 
