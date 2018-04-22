@@ -226,7 +226,13 @@ namespace Noise
 				this.transport = transport;
 			}
 
-			return ReadPacket(plaintext.AsSpan(0, read));
+			if (isNextMessageEncrypted)
+			{
+				return ReadPacket(plaintext.AsSpan(0, read));
+			}
+
+			isNextMessageEncrypted = true;
+			return plaintext.AsSpan(0, read).ToArray();
 		}
 
 		/// <summary>
