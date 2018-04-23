@@ -117,7 +117,7 @@ namespace Noise
 			handshakeState.Dispose();
 			handshakeState = null;
 
-			InitializeHandshakeState();
+			InitializeHandshakeState(noiseSocketInit2);
 
 			prologueParts = null;
 			isNextMessageEncrypted = IsInitialMessageEncrypted(protocol);
@@ -178,7 +178,7 @@ namespace Noise
 			}
 
 			AddProloguePart(negotiationData);
-			InitializeHandshakeState();
+			InitializeHandshakeState(noiseSocketInit1);
 
 			// negotiation_data_len (2 bytes)
 			// negotiation_data
@@ -296,9 +296,7 @@ namespace Noise
 			}
 
 			var negotiationData = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
-
 			AddProloguePart(negotiationData);
-			InitializeHandshakeState();
 
 			return negotiationData;
 		}
@@ -338,6 +336,8 @@ namespace Noise
 			{
 				throw new InvalidOperationException($"Cannot call {nameof(ReadHandshakeMessageAsync)} after the handshake has been completed.");
 			}
+
+			InitializeHandshakeState(noiseSocketInit1);
 
 			var noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
 			AddProloguePart(noiseMessage);
@@ -500,7 +500,7 @@ namespace Noise
 			prologueParts?.Add(part);
 		}
 
-		private void InitializeHandshakeState()
+		private void InitializeHandshakeState(byte[] noiseSocketInit)
 		{
 			if (handshakeState != null)
 			{
@@ -508,11 +508,11 @@ namespace Noise
 			}
 
 			var prologue = this.config.Prologue.AsSpan();
-			var length = noiseSocketInit1.Length + prologueParts.Sum(part => LenFieldSize + part.Length) + prologue.Length;
+			var length = noiseSocketInit.Length + prologueParts.Sum(part => LenFieldSize + part.Length) + prologue.Length;
 			var buffer = new byte[length];
 
-			noiseSocketInit1.AsSpan().CopyTo(buffer);
-			var next = buffer.AsSpan(noiseSocketInit1.Length);
+			noiseSocketInit.AsSpan().CopyTo(buffer);
+			var next = buffer.AsSpan(noiseSocketInit.Length);
 
 			foreach (var part in prologueParts)
 			{
