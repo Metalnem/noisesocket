@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.Buffers.Binary;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -33,6 +34,8 @@ namespace Noise
 
 		private HandshakeState handshakeState;
 		private Transport transport;
+
+		private readonly List<Memory<byte>> prologueParts;
 		private bool isNextMessageEncrypted;
 		private bool disposed;
 
@@ -63,6 +66,7 @@ namespace Noise
 			this.stream = stream;
 			this.leaveOpen = leaveOpen;
 
+			prologueParts = new List<Memory<byte>>();
 			isNextMessageEncrypted = IsInitialMessageEncrypted(protocol);
 		}
 
@@ -119,7 +123,8 @@ namespace Noise
 				throw new ArgumentException($"Handshake message must be less than or equal to {Protocol.MaxMessageLength} bytes in length.");
 			}
 
-			InitializeHandshakeState(negotiationData.Span);
+			AddProloguePart(negotiationData);
+			InitializeHandshakeState();
 
 			// negotiation_data_len (2 bytes)
 			// negotiation_data
@@ -156,6 +161,7 @@ namespace Noise
 
 				WritePacket(negotiationData.Span, buffer);
 				BinaryPrimitives.WriteUInt16BigEndian(buffer.AsSpan(negotiationLength), (ushort)written);
+				AddProloguePart(buffer.AsMemory(negotiationLength));
 
 				int noiseLength = LenFieldSize + written;
 				int handshakeLength = negotiationLength + noiseLength;
@@ -201,8 +207,12 @@ namespace Noise
 				throw new ArgumentException($"Negotiation data must be less than or equal to {Protocol.MaxMessageLength} bytes in length.");
 			}
 
+			AddProloguePart(negotiationData);
+			InitializeHandshakeState();
+
 			var message = new byte[LenFieldSize + negotiationData.Length + LenFieldSize];
 			WritePacket(negotiationData.Span, message);
+			AddProloguePart(Memory<byte>.Empty);
 
 			await stream.WriteAsync(message, 0, message.Length, cancellationToken).ConfigureAwait(false);
 		}
@@ -233,7 +243,9 @@ namespace Noise
 			}
 
 			var negotiationData = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
-			InitializeHandshakeState(negotiationData);
+
+			AddProloguePart(negotiationData);
+			InitializeHandshakeState();
 
 			return negotiationData;
 		}
@@ -275,6 +287,7 @@ namespace Noise
 			}
 
 			var noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
+			AddProloguePart(noiseMessage);
 
 			if (noiseMessage.Length == 0)
 			{
@@ -429,41 +442,38 @@ namespace Noise
 			return ReadPacket(noiseMessage.AsSpan(0, read));
 		}
 
-		private void InitializeHandshakeState(ReadOnlySpan<byte> negotiationMessage)
+		private void InitializeHandshakeState()
 		{
 			if (handshakeState != null)
 			{
 				return;
 			}
 
-			var prologue = config.Prologue.AsSpan();
-			var length = noiseSocketInit1.Length + LenFieldSize + negotiationMessage.Length + prologue.Length;
+			var prologue = this.config.Prologue.AsSpan();
+			var length = noiseSocketInit1.Length + prologueParts.Sum(part => LenFieldSize + part.Length) + prologue.Length;
+			var buffer = new byte[length];
 
-			// Prevent the buffer from going to the LOH (it may be greater than 85000 bytes).
-			var pool = ArrayPool<byte>.Shared;
-			var buffer = pool.Rent(length);
+			noiseSocketInit1.AsSpan().CopyTo(buffer);
+			var next = buffer.AsSpan(noiseSocketInit1.Length);
 
-			try
+			foreach (var part in prologueParts)
 			{
-				noiseSocketInit1.AsSpan().CopyTo(buffer);
-				WritePacket(negotiationMessage, buffer.AsSpan(noiseSocketInit1.Length));
-				prologue.CopyTo(buffer.AsSpan(length - prologue.Length));
-
-				var config = new ProtocolConfig
-				{
-					Initiator = this.config.Initiator,
-					Prologue = buffer,
-					LocalStatic = this.config.LocalStatic,
-					RemoteStatic = this.config.RemoteStatic,
-					PreSharedKeys = this.config.PreSharedKeys
-				};
-
-				handshakeState = protocol.Create(config);
+				WritePacket(part.Span, next);
+				next = next.Slice(LenFieldSize + part.Length);
 			}
-			finally
+
+			prologue.CopyTo(next);
+
+			var config = new ProtocolConfig
 			{
-				pool.Return(buffer);
-			}
+				Initiator = this.config.Initiator,
+				Prologue = buffer,
+				LocalStatic = this.config.LocalStatic,
+				RemoteStatic = this.config.RemoteStatic,
+				PreSharedKeys = this.config.PreSharedKeys
+			};
+
+			handshakeState = protocol.Create(config);
 		}
 
 		private void ThrowIfDisposed()
@@ -516,6 +526,11 @@ namespace Noise
 			await stream.ReadAsync(data, 0, data.Length, cancellationToken).ConfigureAwait(false);
 
 			return data;
+		}
+
+		private void AddProloguePart(Memory<byte> part)
+		{
+			prologueParts.Add(part);
 		}
 
 		private static bool IsInitialMessageEncrypted(Protocol protocol)
