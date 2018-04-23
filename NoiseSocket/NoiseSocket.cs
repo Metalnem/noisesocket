@@ -442,6 +442,11 @@ namespace Noise
 			return ReadPacket(noiseMessage.AsSpan(0, read));
 		}
 
+		private void AddProloguePart(Memory<byte> part)
+		{
+			prologueParts.Add(part);
+		}
+
 		private void InitializeHandshakeState()
 		{
 			if (handshakeState != null)
@@ -526,11 +531,6 @@ namespace Noise
 			await stream.ReadAsync(data, 0, data.Length, cancellationToken).ConfigureAwait(false);
 
 			return data;
-		}
-
-		private void AddProloguePart(Memory<byte> part)
-		{
-			prologueParts.Add(part);
 		}
 
 		private static bool IsInitialMessageEncrypted(Protocol protocol)
