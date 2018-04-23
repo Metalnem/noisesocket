@@ -556,16 +556,13 @@ namespace Noise
 
 			prologue.CopyTo(next);
 
-			var config = new ProtocolConfig
-			{
-				Initiator = this.config.Initiator,
-				Prologue = buffer,
-				LocalStatic = this.config.LocalStatic,
-				RemoteStatic = this.config.RemoteStatic,
-				PreSharedKeys = this.config.PreSharedKeys
-			};
-
-			handshakeState = protocol.Create(config);
+			handshakeState = protocol.Create(
+				config.Initiator,
+				buffer,
+				config.LocalStatic,
+				config.RemoteStatic,
+				config.PreSharedKeys
+			);
 		}
 
 		private void ThrowIfDisposed()
