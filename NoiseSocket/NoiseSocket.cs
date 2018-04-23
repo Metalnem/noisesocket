@@ -74,18 +74,19 @@ namespace Noise
 
 		/// <summary>
 		/// Reinitializes the current instance of the <see cref="NoiseSocket"/>
-		/// class with a new Noise protocol.
+		/// class with a new Noise protocol, different from the initial Noise protocol.
+		/// The reason for the reinitialization was responder's decision to switch protocol.
 		/// </summary>
 		/// <param name="protocol">A concrete Noise protocol (e.g. Noise_XX_25519_AESGCM_BLAKE2b).</param>
 		/// <param name="config">
-		/// A set of parameters used to instantiate an initial <see cref="HandshakeState"/>.
+		/// A set of parameters used to instantiate a <see cref="HandshakeState"/>.
 		/// </param>
 		/// <exception cref="ObjectDisposedException">
 		/// Thrown if the current instance has already been disposed.
 		/// </exception>
 		/// <exception cref="InvalidOperationException">
 		/// Thrown if the handshake has already been completed
-		/// or if this method was already called once.
+		/// or if the protocol has already been changed once.
 		/// </exception>
 		/// <exception cref="ArgumentNullException">
 		/// Thrown if either <paramref name="protocol"/> or <paramref name="config"/> is null.
@@ -94,18 +95,51 @@ namespace Noise
 		/// This method can also throw all exceptions that <see cref="Protocol.Create(ProtocolConfig)"/>
 		/// method can throw. See the <see cref="Protocol"/> class documentation for more details.
 		/// </remarks>
-		public void Reinitialize(Protocol protocol, ProtocolConfig config)
+		public void Switch(Protocol protocol, ProtocolConfig config)
+		{
+			Reinitialize(protocol, config, noiseSocketInit2);
+		}
+
+		/// <summary>
+		/// Reinitializes the current instance of the <see cref="NoiseSocket"/>
+		/// class with a new Noise protocol, different from the initial Noise protocol.
+		/// The reason for the reinitialization was responder's retry request.
+		/// </summary>
+		/// <param name="protocol">A concrete Noise protocol (e.g. Noise_XX_25519_AESGCM_BLAKE2b).</param>
+		/// <param name="config">
+		/// A set of parameters used to instantiate a <see cref="HandshakeState"/>.
+		/// </param>
+		/// <exception cref="ObjectDisposedException">
+		/// Thrown if the current instance has already been disposed.
+		/// </exception>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown if the handshake has already been completed
+		/// or if the protocol has already been changed once.
+		/// </exception>
+		/// <exception cref="ArgumentNullException">
+		/// Thrown if either <paramref name="protocol"/> or <paramref name="config"/> is null.
+		/// </exception>
+		/// <remarks>
+		/// This method can also throw all exceptions that <see cref="Protocol.Create(ProtocolConfig)"/>
+		/// method can throw. See the <see cref="Protocol"/> class documentation for more details.
+		/// </remarks>
+		public void Retry(Protocol protocol, ProtocolConfig config)
+		{
+			Reinitialize(protocol, config, noiseSocketInit3);
+		}
+
+		private void Reinitialize(Protocol protocol, ProtocolConfig config, byte[] noiseSocketInit)
 		{
 			ThrowIfDisposed();
 
 			if (transport != null)
 			{
-				throw new InvalidOperationException($"Cannot call {nameof(Reinitialize)} after the handshake has been completed.");
+				throw new InvalidOperationException($"Cannot change protocol after the handshake has been completed.");
 			}
 
 			if (!allowReinitialization)
 			{
-				throw new InvalidOperationException($"Cannot call {nameof(Reinitialize)} more than once.");
+				throw new InvalidOperationException($"Cannot change protocol more than once.");
 			}
 
 			ThrowIfNull(protocol, nameof(protocol));
@@ -117,7 +151,7 @@ namespace Noise
 			handshakeState.Dispose();
 			handshakeState = null;
 
-			InitializeHandshakeState(noiseSocketInit2);
+			InitializeHandshakeState(noiseSocketInit);
 
 			prologueParts = null;
 			isNextMessageEncrypted = IsInitialMessageEncrypted(protocol);
