@@ -27,16 +27,17 @@ namespace Noise
 		private static readonly byte[] noiseSocketInit2 = Encoding.UTF8.GetBytes("NoiseSocketInit2");
 		private static readonly byte[] noiseSocketInit3 = Encoding.UTF8.GetBytes("NoiseSocketInit3");
 
-		private readonly Protocol protocol;
-		private readonly ProtocolConfig config;
+		private Protocol protocol;
+		private ProtocolConfig config;
 		private readonly Stream stream;
 		private readonly bool leaveOpen;
 
 		private HandshakeState handshakeState;
 		private Transport transport;
 
-		private readonly List<Memory<byte>> prologueParts;
+		private List<Memory<byte>> prologueParts;
 		private bool isNextMessageEncrypted;
+		private bool allowReinitialization;
 		private bool disposed;
 
 		/// <summary>
@@ -68,6 +69,59 @@ namespace Noise
 
 			prologueParts = new List<Memory<byte>>();
 			isNextMessageEncrypted = IsInitialMessageEncrypted(protocol);
+			allowReinitialization = true;
+		}
+
+		/// <summary>
+		/// Reinitializes the current instance of the <see cref="NoiseSocket"/>
+		/// class with a new Noise protocol.
+		/// </summary>
+		/// <param name="protocol">A concrete Noise protocol (e.g. Noise_XX_25519_AESGCM_BLAKE2b).</param>
+		/// <param name="config">
+		/// A set of parameters used to instantiate an initial <see cref="HandshakeState"/>.
+		/// </param>
+		/// <exception cref="ObjectDisposedException">
+		/// Thrown if the current instance has already been disposed.
+		/// </exception>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown if the handshake has already been completed
+		/// or if this method was already called once.
+		/// </exception>
+		/// <exception cref="ArgumentNullException">
+		/// Thrown if either <paramref name="protocol"/> or <paramref name="config"/> is null.
+		/// </exception>
+		/// <remarks>
+		/// This method can also throw all exceptions that <see cref="Protocol.Create(ProtocolConfig)"/>
+		/// method can throw. See the <see cref="Protocol"/> class documentation for more details.
+		/// </remarks>
+		public void Reinitialize(Protocol protocol, ProtocolConfig config)
+		{
+			ThrowIfDisposed();
+
+			if (transport != null)
+			{
+				throw new InvalidOperationException($"Cannot call {nameof(Reinitialize)} after the handshake has been completed.");
+			}
+
+			if (!allowReinitialization)
+			{
+				throw new InvalidOperationException($"Cannot call {nameof(Reinitialize)} more than once.");
+			}
+
+			ThrowIfNull(protocol, nameof(protocol));
+			ThrowIfNull(config, nameof(config));
+
+			this.protocol = protocol;
+			this.config = config;
+
+			handshakeState.Dispose();
+			handshakeState = null;
+
+			InitializeHandshakeState();
+
+			prologueParts = null;
+			isNextMessageEncrypted = IsInitialMessageEncrypted(protocol);
+			allowReinitialization = false;
 		}
 
 		/// <summary>
@@ -208,11 +262,10 @@ namespace Noise
 			}
 
 			AddProloguePart(negotiationData);
-			InitializeHandshakeState();
+			AddProloguePart(Memory<byte>.Empty);
 
 			var message = new byte[LenFieldSize + negotiationData.Length + LenFieldSize];
 			WritePacket(negotiationData.Span, message);
-			AddProloguePart(Memory<byte>.Empty);
 
 			await stream.WriteAsync(message, 0, message.Length, cancellationToken).ConfigureAwait(false);
 		}
@@ -444,7 +497,7 @@ namespace Noise
 
 		private void AddProloguePart(Memory<byte> part)
 		{
-			prologueParts.Add(part);
+			prologueParts?.Add(part);
 		}
 
 		private void InitializeHandshakeState()
