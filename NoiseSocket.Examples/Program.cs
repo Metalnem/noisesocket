@@ -64,6 +64,8 @@ namespace Noise.Examples
 				using (var socket = new NoiseSocket(protocol, config, stream))
 				{
 					await socket.ReadNegotiationDataAsync();
+					socket.Accept(protocol, config);
+
 					await socket.ReadHandshakeMessageAsync();
 					await socket.WriteHandshakeMessageAsync(null);
 					await socket.ReadNegotiationDataAsync();
