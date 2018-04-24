@@ -263,7 +263,8 @@ namespace Noise
 					WritePacket(messageBody.Span, plaintext.Span);
 				}
 
-				var (written, hash, transport) = handshakeState.WriteMessage(plaintext.Span, buffer.AsSpan(negotiationLength + LenFieldSize));
+				var ciphertext = buffer.AsMemory(negotiationLength + LenFieldSize);
+				var (written, hash, transport) = handshakeState.WriteMessage(plaintext.Span, ciphertext.Span);
 				isNextMessageEncrypted = true;
 
 				if (transport != null)
@@ -276,7 +277,7 @@ namespace Noise
 
 				WritePacket(negotiationData.Span, buffer);
 				BinaryPrimitives.WriteUInt16BigEndian(buffer.AsSpan(negotiationLength), (ushort)written);
-				AddProloguePart(buffer.AsMemory(negotiationLength));
+				AddProloguePart(ciphertext.Slice(0, written));
 
 				int noiseLength = LenFieldSize + written;
 				int handshakeLength = negotiationLength + noiseLength;
