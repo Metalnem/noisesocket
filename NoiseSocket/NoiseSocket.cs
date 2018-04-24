@@ -220,7 +220,7 @@ namespace Noise
 		/// method can throw. See the <see cref="Protocol"/> class documentation for more details.
 		/// </remarks>
 		public async Task WriteHandshakeMessageAsync(
-			Memory<byte> negotiationData,
+			Memory<byte> negotiationData = default,
 			Memory<byte> messageBody = default,
 			ushort paddedLength = default,
 			CancellationToken cancellationToken = default)

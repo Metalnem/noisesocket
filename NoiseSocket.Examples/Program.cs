@@ -8,8 +8,8 @@ namespace Noise.Examples
 {
 	public class Program
 	{
-		private const int Port = 10101;
-		private const int Padding = 117;
+		private const int Port = 19285;
+		private const int PaddedLength = 117;
 
 		private static readonly Protocol protocol = Protocol.Parse("Noise_XX_25519_AESGCM_BLAKE2b".AsSpan());
 		private static readonly byte[] negotiationData = new byte[] { 0, 1, 1, 2, 2, 9 };
@@ -35,13 +35,13 @@ namespace Noise.Examples
 
 					using (var socket = new NoiseSocket(protocol, config, stream))
 					{
-						await socket.WriteHandshakeMessageAsync(negotiationData);
+						await socket.WriteHandshakeMessageAsync(negotiationData, paddedLength: PaddedLength);
 						await socket.ReadNegotiationDataAsync();
 						await socket.ReadHandshakeMessageAsync();
-						await socket.WriteHandshakeMessageAsync(null);
+						await socket.WriteHandshakeMessageAsync(paddedLength: PaddedLength);
 
 						var request = Encoding.UTF8.GetBytes("I'm cooking MC's like a pound of bacon");
-						await socket.WriteMessageAsync(request, Padding);
+						await socket.WriteMessageAsync(request, PaddedLength);
 
 						var response = await socket.ReadMessageAsync();
 						Console.WriteLine(Encoding.UTF8.GetString(response));
@@ -55,28 +55,33 @@ namespace Noise.Examples
 			var listener = new TcpListener(IPAddress.Loopback, Port);
 			listener.Start();
 
-			using (var client = await listener.AcceptTcpClientAsync())
-			using (var stream = client.GetStream())
-			using (var keyPair = KeyPair.Generate())
+			try
 			{
-				var config = new ProtocolConfig(initiator: false, s: keyPair.PrivateKey);
-
-				using (var socket = new NoiseSocket(protocol, config, stream))
+				using (var client = await listener.AcceptTcpClientAsync())
+				using (var stream = client.GetStream())
+				using (var keyPair = KeyPair.Generate())
 				{
-					await socket.ReadNegotiationDataAsync();
-					socket.Accept(protocol, config);
+					var config = new ProtocolConfig(initiator: false, s: keyPair.PrivateKey);
 
-					await socket.ReadHandshakeMessageAsync();
-					await socket.WriteHandshakeMessageAsync(null);
-					await socket.ReadNegotiationDataAsync();
-					await socket.ReadHandshakeMessageAsync();
+					using (var socket = new NoiseSocket(protocol, config, stream))
+					{
+						await socket.ReadNegotiationDataAsync();
+						socket.Accept(protocol, config);
 
-					var request = await socket.ReadMessageAsync();
-					await socket.WriteMessageAsync(request, Padding);
+						await socket.ReadHandshakeMessageAsync();
+						await socket.WriteHandshakeMessageAsync(paddedLength: PaddedLength);
+						await socket.ReadNegotiationDataAsync();
+						await socket.ReadHandshakeMessageAsync();
+
+						var request = await socket.ReadMessageAsync();
+						await socket.WriteMessageAsync(request, PaddedLength);
+					}
 				}
 			}
-
-			listener.Stop();
+			finally
+			{
+				listener.Stop();
+			}
 		}
 	}
 }
