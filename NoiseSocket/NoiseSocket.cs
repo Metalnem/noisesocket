@@ -434,7 +434,8 @@ namespace Noise
 		}
 
 		/// <summary>
-		/// Asynchronously consumes the encoded message from the input stream.
+		/// Asynchronously consumes the handshake message from
+		/// the input stream without attempting to decrypt it.
 		/// </summary>
 		/// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
 		/// <returns>
@@ -448,17 +449,18 @@ namespace Noise
 		/// </exception>
 		/// <exception cref="IOException">Thrown if an I/O error occurs.</exception>
 		/// <exception cref="NotSupportedException">Thrown if the stream does not support reading.</exception>
-		public async Task DiscardMessageAsync(CancellationToken cancellationToken = default)
+		public async Task IgnoreHandshakeMessageAsync(CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
 
 			if (transport != null)
 			{
-				throw new InvalidOperationException($"Cannot call {nameof(DiscardMessageAsync)} after the handshake has been completed.");
+				string error = $"Cannot call {nameof(IgnoreHandshakeMessageAsync)} after the handshake has been completed.";
+				throw new InvalidOperationException(error);
 			}
 
-			var message = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
-			AddProloguePart(message);
+			var noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
+			AddProloguePart(noiseMessage);
 		}
 
 		/// <summary>
