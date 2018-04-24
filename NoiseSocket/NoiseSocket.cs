@@ -73,21 +73,6 @@ namespace Noise
 		}
 
 		/// <summary>
-		/// A boolean indicating whether the handshake has been completed or not.
-		/// </summary>
-		/// <exception cref="ObjectDisposedException">
-		/// Thrown if the current instance has already been disposed.
-		/// </exception>
-		public bool HandshakeCompleted
-		{
-			get
-			{
-				ThrowIfDisposed();
-				return transport != null;
-			}
-		}
-
-		/// <summary>
 		/// Initializes the current instance of the <see cref="NoiseSocket"/>
 		/// class with an initiator's choice of the Noise protocol.
 		/// </summary>
@@ -192,7 +177,7 @@ namespace Noise
 
 			var handshakeState = InitializeHandshakeState(noiseSocketInit);
 
-			this.handshakeState.Dispose();
+			this.handshakeState?.Dispose();
 			this.handshakeState = handshakeState;
 
 			prologueParts = null;
