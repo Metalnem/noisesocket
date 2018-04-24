@@ -35,7 +35,9 @@ namespace Noise
 		private HandshakeState handshakeState;
 		private Transport transport;
 
-		private List<Memory<byte>> prologueParts;
+		private byte[] noiseSocketInit = noiseSocketInit1;
+		private List<Memory<byte>> prologueParts = new List<Memory<byte>>();
+
 		private bool isNextMessageEncrypted;
 		private bool allowReinitialization;
 		private bool disposed;
@@ -67,7 +69,6 @@ namespace Noise
 			this.stream = stream;
 			this.leaveOpen = leaveOpen;
 
-			prologueParts = new List<Memory<byte>>();
 			isNextMessageEncrypted = IsInitialMessageEncrypted(protocol);
 			allowReinitialization = true;
 		}
@@ -96,7 +97,8 @@ namespace Noise
 		/// </remarks>
 		public void Accept(Protocol protocol, ProtocolConfig config)
 		{
-			Reinitialize(protocol, config, noiseSocketInit1);
+			noiseSocketInit = noiseSocketInit1;
+			Reinitialize(protocol, config);
 		}
 
 		/// <summary>
@@ -124,7 +126,8 @@ namespace Noise
 		/// </remarks>
 		public void Switch(Protocol protocol, ProtocolConfig config)
 		{
-			Reinitialize(protocol, config, noiseSocketInit2);
+			noiseSocketInit = noiseSocketInit2;
+			Reinitialize(protocol, config);
 		}
 
 		/// <summary>
@@ -152,10 +155,11 @@ namespace Noise
 		/// </remarks>
 		public void Retry(Protocol protocol, ProtocolConfig config)
 		{
-			Reinitialize(protocol, config, noiseSocketInit3);
+			noiseSocketInit = noiseSocketInit3;
+			Reinitialize(protocol, config);
 		}
 
-		private void Reinitialize(Protocol protocol, ProtocolConfig config, byte[] noiseSocketInit)
+		private void Reinitialize(Protocol protocol, ProtocolConfig config)
 		{
 			ThrowIfDisposed();
 
@@ -175,12 +179,12 @@ namespace Noise
 			this.protocol = protocol;
 			this.config = config;
 
-			var handshakeState = InitializeHandshakeState(noiseSocketInit);
+			if (handshakeState != null)
+			{
+				handshakeState.Dispose();
+				handshakeState = null;
+			}
 
-			this.handshakeState?.Dispose();
-			this.handshakeState = handshakeState;
-
-			prologueParts = null;
 			isNextMessageEncrypted = IsInitialMessageEncrypted(protocol);
 			allowReinitialization = false;
 		}
@@ -239,7 +243,7 @@ namespace Noise
 			}
 
 			AddProloguePart(negotiationData);
-			handshakeState = handshakeState ?? InitializeHandshakeState(noiseSocketInit1);
+			handshakeState = handshakeState ?? InitializeHandshakeState();
 
 			// negotiation_data_len (2 bytes)
 			// negotiation_data
@@ -399,7 +403,7 @@ namespace Noise
 				throw new InvalidOperationException($"Cannot call {nameof(ReadHandshakeMessageAsync)} after the handshake has been completed.");
 			}
 
-			handshakeState = handshakeState ?? InitializeHandshakeState(noiseSocketInit1);
+			handshakeState = handshakeState ?? InitializeHandshakeState();
 
 			var noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
 			AddProloguePart(noiseMessage);
@@ -453,7 +457,8 @@ namespace Noise
 				throw new InvalidOperationException($"Cannot call {nameof(DiscardMessageAsync)} after the handshake has been completed.");
 			}
 
-			await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
+			var message = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
+			AddProloguePart(message);
 		}
 
 		/// <summary>
@@ -559,10 +564,10 @@ namespace Noise
 
 		private void AddProloguePart(Memory<byte> part)
 		{
-			prologueParts?.Add(part);
+			prologueParts.Add(part);
 		}
 
-		private HandshakeState InitializeHandshakeState(byte[] noiseSocketInit)
+		private HandshakeState InitializeHandshakeState()
 		{
 			var prologue = this.config.Prologue.AsSpan();
 			var length = noiseSocketInit.Length + prologueParts.Sum(part => LenFieldSize + part.Length) + prologue.Length;
