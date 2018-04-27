@@ -21,6 +21,7 @@ namespace Noise
 	{
 		private const int LenFieldSize = 2;
 		private const int TagSize = 16;
+		private const int MaxSavedMessagesCount = 3;
 
 		private static readonly byte[] empty = new byte[0];
 		private static readonly byte[] noiseSocketInit1 = Encoding.UTF8.GetBytes("NoiseSocketInit1");
@@ -37,7 +38,7 @@ namespace Noise
 		private Transport transport;
 
 		private byte[] noiseSocketInit = noiseSocketInit1;
-		private List<Memory<byte>> prologueParts = new List<Memory<byte>>();
+		private List<SavedMessage> savedMessages = new List<SavedMessage>();
 
 		private bool isNextMessageEncrypted;
 		private bool allowReinitialization;
@@ -276,7 +277,7 @@ namespace Noise
 				throw new ArgumentException($"Handshake message must be less than or equal to {Protocol.MaxMessageLength} bytes in length.");
 			}
 
-			AddProloguePart(negotiationData);
+			SaveMessage(MessageType.WriteNegotiationData, negotiationData);
 			handshakeState = handshakeState ?? InitializeHandshakeState();
 
 			// negotiation_data_len (2 bytes)
@@ -315,7 +316,7 @@ namespace Noise
 
 				WritePacket(negotiationData.Span, buffer);
 				BinaryPrimitives.WriteUInt16BigEndian(buffer.AsSpan(negotiationLength), (ushort)written);
-				AddProloguePart(ciphertext.Slice(0, written));
+				SaveMessage(MessageType.WriteNoiseMessage, ciphertext.Slice(0, written));
 
 				int noiseLength = LenFieldSize + written;
 				int handshakeLength = negotiationLength + noiseLength;
@@ -361,8 +362,8 @@ namespace Noise
 				throw new ArgumentException($"Negotiation data must be less than or equal to {Protocol.MaxMessageLength} bytes in length.");
 			}
 
-			AddProloguePart(negotiationData);
-			AddProloguePart(Memory<byte>.Empty);
+			SaveMessage(MessageType.WriteNegotiationData, negotiationData);
+			SaveMessage(MessageType.WriteNoiseMessage, Memory<byte>.Empty);
 
 			var message = new byte[LenFieldSize + negotiationData.Length + LenFieldSize];
 			WritePacket(negotiationData.Span, message);
@@ -396,7 +397,7 @@ namespace Noise
 			}
 
 			var negotiationData = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
-			AddProloguePart(negotiationData);
+			SaveMessage(MessageType.ReadNegotiationData, negotiationData);
 
 			return negotiationData;
 		}
@@ -439,7 +440,7 @@ namespace Noise
 			handshakeState = handshakeState ?? InitializeHandshakeState();
 
 			var noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
-			AddProloguePart(noiseMessage);
+			SaveMessage(MessageType.ReadNoiseMessage, noiseMessage);
 
 			if (noiseMessage.Length == 0)
 			{
@@ -493,7 +494,7 @@ namespace Noise
 			}
 
 			var noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
-			AddProloguePart(noiseMessage);
+			SaveMessage(MessageType.ReadNoiseMessage, noiseMessage);
 		}
 
 		/// <summary>
@@ -597,33 +598,58 @@ namespace Noise
 			return ReadPacket(noiseMessage.AsSpan(0, read));
 		}
 
-		private void AddProloguePart(Memory<byte> part)
+		private void SaveMessage(MessageType type, Memory<byte> data)
 		{
-			prologueParts.Add(part);
+			if (savedMessages != null)
+			{
+				// Once we are done with the initial message's negotiation_data,
+				// the initial message's noise_message, and the responding
+				// message's negotiation_data (that's three messages in total),
+				// we no longer have to keep old messages.
+
+				if (savedMessages.Count == MaxSavedMessagesCount)
+				{
+					savedMessages = null;
+				}
+				else
+				{
+					savedMessages.Add(new SavedMessage(type, data));
+					ThrowIfPrologueInvalid(false);
+				}
+			}
 		}
 
 		private HandshakeState InitializeHandshakeState()
 		{
+			Debug.Assert(savedMessages != null);
+
 			if (protocol == null)
 			{
 				string error = $"Cannot perform the handshake before calling either {nameof(Accept)}, {nameof(Switch)}, or {nameof(Retry)}.";
 				throw new InvalidOperationException(error);
 			}
 
+			ThrowIfPrologueInvalid(true);
+
 			var prologue = this.config.Prologue.AsSpan();
-			var length = noiseSocketInit.Length + prologueParts.Sum(part => LenFieldSize + part.Length) + prologue.Length;
+			var length = noiseSocketInit.Length + savedMessages.Sum(message => LenFieldSize + message.Data.Length) + prologue.Length;
 			var buffer = new byte[length];
 
 			noiseSocketInit.AsSpan().CopyTo(buffer);
 			var next = buffer.AsSpan(noiseSocketInit.Length);
 
-			foreach (var part in prologueParts)
+			foreach (var message in savedMessages)
 			{
-				WritePacket(part.Span, next);
-				next = next.Slice(LenFieldSize + part.Length);
+				WritePacket(message.Data.Span, next);
+				next = next.Slice(LenFieldSize + message.Data.Length);
 			}
 
 			prologue.CopyTo(next);
+
+			if (!allowReinitialization)
+			{
+				savedMessages = null;
+			}
 
 			return protocol.Create(
 				config.Initiator,
@@ -634,11 +660,52 @@ namespace Noise
 			);
 		}
 
+		private bool IsPrologueValid(bool strict)
+		{
+			Debug.Assert(savedMessages.Count <= MaxSavedMessagesCount);
+
+			if ((noiseSocketInit == noiseSocketInit1 && savedMessages.Count == 1)
+				|| (strict && savedMessages.Count == MaxSavedMessagesCount)
+				|| (!strict && savedMessages.Count <= MaxSavedMessagesCount))
+			{
+				var actual = savedMessages.Select(message => message.Type);
+				var expected = LongestValidPrologue(client).Take(savedMessages.Count);
+
+				return expected.SequenceEqual(actual);
+			}
+
+			return false;
+		}
+
+		private static IEnumerable<MessageType> LongestValidPrologue(bool client)
+		{
+			if (client)
+			{
+				yield return MessageType.WriteNegotiationData;
+				yield return MessageType.WriteNoiseMessage;
+				yield return MessageType.ReadNegotiationData;
+			}
+			else
+			{
+				yield return MessageType.ReadNegotiationData;
+				yield return MessageType.ReadNoiseMessage;
+				yield return MessageType.WriteNegotiationData;
+			}
+		}
+
 		private void ThrowIfDisposed()
 		{
 			if (disposed)
 			{
 				throw new ObjectDisposedException(nameof(NoiseSocket));
+			}
+		}
+
+		private void ThrowIfPrologueInvalid(bool strict)
+		{
+			if (!IsPrologueValid(strict))
+			{
+				throw new InvalidOperationException("Handshake operations have been performed in wrong order.");
 			}
 		}
 
@@ -726,6 +793,26 @@ namespace Noise
 				transport?.Dispose();
 
 				disposed = true;
+			}
+		}
+
+		private enum MessageType
+		{
+			ReadNegotiationData,
+			WriteNegotiationData,
+			ReadNoiseMessage,
+			WriteNoiseMessage
+		}
+
+		private struct SavedMessage
+		{
+			public readonly MessageType Type;
+			public readonly Memory<byte> Data;
+
+			public SavedMessage(MessageType type, Memory<byte> data)
+			{
+				Type = type;
+				Data = data;
 			}
 		}
 	}
