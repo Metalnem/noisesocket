@@ -604,6 +604,12 @@ namespace Noise
 
 		private HandshakeState InitializeHandshakeState()
 		{
+			if (protocol == null)
+			{
+				string error = $"Cannot perform the handshake before calling either {nameof(Accept)}, {nameof(Switch)}, or {nameof(Retry)}.";
+				throw new InvalidOperationException(error);
+			}
+
 			var prologue = this.config.Prologue.AsSpan();
 			var length = noiseSocketInit.Length + prologueParts.Sum(part => LenFieldSize + part.Length) + prologue.Length;
 			var buffer = new byte[length];
