@@ -38,7 +38,7 @@ namespace Noise.Examples
 
 				// Initialize the NoiseSocket with the network stream.
 				using (var stream = new NetworkStream(socket))
-				using (var noise = new NoiseSocket(initial, config, stream))
+				using (var noise = NoiseSocket.CreateClient(initial, config, stream))
 				{
 					// Send the initial handshake message to the server. In the real world the
 					// negotiation data would contain the initial protocol, supported protocols
@@ -85,14 +85,10 @@ namespace Noise.Examples
 				socket.Bind(new IPEndPoint(IPAddress.Loopback, Port));
 				socket.Listen((int)SocketOptionName.MaxConnections);
 
-				// Select the initial Noise protocol and configuration.
-				var initial = Protocol.Parse("Noise_IN_25519_AESGCM_BLAKE2s".AsSpan());
-				var config = new ProtocolConfig(initiator: false);
-
 				// Accept the connection and initialize the NoiseSocket with its network stream.
 				using (var client = await socket.AcceptAsync())
 				using (var stream = new NetworkStream(client))
-				using (var noise = new NoiseSocket(initial, config, stream))
+				using (var noise = NoiseSocket.CreateServer(stream))
 				{
 					// Receive the negotiation data from the client. In the real world the
 					// negotiation data would contain the initial protocol, supported protocols
@@ -104,7 +100,7 @@ namespace Noise.Examples
 					{
 						// The server decides to switch to a new protocol.
 						// It now plays the role of the initiator.
-						config = new ProtocolConfig(initiator: true, s: keyPair.PrivateKey);
+						var config = new ProtocolConfig(initiator: true, s: keyPair.PrivateKey);
 						noise.Switch(protocol, config);
 
 						// Read the handshake message from the client, but without decrypting it.

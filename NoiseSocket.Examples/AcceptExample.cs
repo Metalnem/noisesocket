@@ -39,7 +39,7 @@ namespace Noise.Examples
 
 					// Initialize the NoiseSocket with the network stream.
 					using (var stream = client.GetStream())
-					using (var noise = new NoiseSocket(protocol, config, stream))
+					using (var noise = NoiseSocket.CreateClient(protocol, config, stream))
 					{
 						// Send the initial handshake message to the server. In the real world the
 						// negotiation data would contain the initial protocol, supported protocols
@@ -85,7 +85,7 @@ namespace Noise.Examples
 
 						// Initialize the NoiseSocket with the network stream.
 						using (var stream = client.GetStream())
-						using (var noise = new NoiseSocket(protocol, config, stream))
+						using (var noise = NoiseSocket.CreateServer(stream))
 						{
 							// Receive the negotiation data from the client. In the real world the
 							// negotiation data would contain the initial protocol, supported protocols

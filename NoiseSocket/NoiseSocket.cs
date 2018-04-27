@@ -27,6 +27,7 @@ namespace Noise
 		private static readonly byte[] noiseSocketInit2 = Encoding.UTF8.GetBytes("NoiseSocketInit2");
 		private static readonly byte[] noiseSocketInit3 = Encoding.UTF8.GetBytes("NoiseSocketInit3");
 
+		private readonly bool client;
 		private Protocol protocol;
 		private ProtocolConfig config;
 		private readonly Stream stream;
@@ -42,8 +43,20 @@ namespace Noise
 		private bool allowReinitialization;
 		private bool disposed;
 
+		private NoiseSocket(bool client, Protocol protocol, ProtocolConfig config, Stream stream, bool leaveOpen = false)
+		{
+			this.client = client;
+			this.protocol = protocol;
+			this.config = config;
+			this.stream = stream;
+			this.leaveOpen = leaveOpen;
+
+			isNextMessageEncrypted = protocol != null && IsInitialMessageEncrypted(protocol);
+			allowReinitialization = true;
+		}
+
 		/// <summary>
-		/// Initializes a new instance of the <see cref="NoiseSocket"/> class.
+		/// Initializes a new client instance of the <see cref="NoiseSocket"/> class.
 		/// </summary>
 		/// <param name="protocol">A concrete Noise protocol (e.g. Noise_XX_25519_AESGCM_BLAKE2b).</param>
 		/// <param name="config">
@@ -54,23 +67,45 @@ namespace Noise
 		/// True to leave the stream open after the
 		/// <see cref="NoiseSocket"/> object is disposed, false otherwise.
 		/// </param>
+		/// <returns>The new <see cref="NoiseSocket"/> client.</returns>
 		/// <exception cref="ArgumentNullException">
 		/// Thrown if either <paramref name="protocol"/>,
 		/// <paramref name="config"/>, or <paramref name="stream"/> is null.
 		/// </exception>
-		public NoiseSocket(Protocol protocol, ProtocolConfig config, Stream stream, bool leaveOpen = false)
+		/// <exception cref="ArgumentException">
+		/// Thrown if the client was initialized as a Noise protocol responder.
+		/// </exception>
+		public static NoiseSocket CreateClient(Protocol protocol, ProtocolConfig config, Stream stream, bool leaveOpen = false)
 		{
 			ThrowIfNull(protocol, nameof(protocol));
 			ThrowIfNull(config, nameof(config));
 			ThrowIfNull(stream, nameof(stream));
 
-			this.protocol = protocol;
-			this.config = config;
-			this.stream = stream;
-			this.leaveOpen = leaveOpen;
+			if (!config.Initiator)
+			{
+				throw new ArgumentException("The client must be initialized as a Noise protocol initiator.");
+			}
 
-			isNextMessageEncrypted = IsInitialMessageEncrypted(protocol);
-			allowReinitialization = true;
+			return new NoiseSocket(true, protocol, config, stream, leaveOpen);
+		}
+
+		/// <summary>
+		/// Initializes a new server instance of the <see cref="NoiseSocket"/> class.
+		/// </summary>
+		/// <param name="stream">The stream for reading and writing encoded protocol messages.</param>
+		/// <param name="leaveOpen">
+		/// True to leave the stream open after the
+		/// <see cref="NoiseSocket"/> object is disposed, false otherwise.
+		/// </param>
+		/// <returns>The new <see cref="NoiseSocket"/> server.</returns>
+		/// <exception cref="ArgumentNullException">
+		/// Thrown if <paramref name="stream"/> is null.
+		/// </exception>
+		public static NoiseSocket CreateServer(Stream stream, bool leaveOpen = false)
+		{
+			ThrowIfNull(stream, nameof(stream));
+
+			return new NoiseSocket(false, null, null, stream, leaveOpen);
 		}
 
 		/// <summary>
@@ -206,8 +241,7 @@ namespace Noise
 		/// Thrown if either the current instance, or the output stream has already been disposed.
 		/// </exception>
 		/// <exception cref="InvalidOperationException">
-		/// Thrown if the call to <see cref="ReadHandshakeMessageAsync"/> was expected
-		/// or the handshake has already been completed.
+		/// Thrown if the call to this method was unexpected in the current state of this object.
 		/// </exception>
 		/// <exception cref="ArgumentException">
 		/// Thrown if either the negotiation data, or the Noise message was greater
@@ -304,7 +338,7 @@ namespace Noise
 		/// Thrown if either the current instance, or the output stream has already been disposed.
 		/// </exception>
 		/// <exception cref="InvalidOperationException">
-		/// Thrown if the handshake has already been completed.
+		/// Thrown if the call to this method was unexpected in the current state of this object.
 		/// </exception>
 		/// <exception cref="ArgumentException">
 		/// Thrown if the negotiation data was greater than
@@ -348,7 +382,7 @@ namespace Noise
 		/// Thrown if either the current instance, or the input stream has already been disposed.
 		/// </exception>
 		/// <exception cref="InvalidOperationException">
-		/// Thrown if the handshake has already been completed.
+		/// Thrown if the call to this method was unexpected in the current state of this object.
 		/// </exception>
 		/// <exception cref="IOException">Thrown if an I/O error occurs.</exception>
 		/// <exception cref="NotSupportedException">Thrown if the stream does not support reading.</exception>
@@ -379,8 +413,7 @@ namespace Noise
 		/// Thrown if either the current instance, or the input stream has already been disposed.
 		/// </exception>
 		/// <exception cref="InvalidOperationException">
-		/// Thrown if the call to <see cref="WriteHandshakeMessageAsync"/>
-		/// was expected or the handshake has already been completed.
+		/// Thrown if the call to this method was unexpected in the current state of this object.
 		/// </exception>
 		/// <exception cref="ArgumentException">
 		/// Thrown if the decrypted message body length was invalid.
@@ -445,7 +478,7 @@ namespace Noise
 		/// Thrown if either the current instance, or the input stream has already been disposed.
 		/// </exception>
 		/// <exception cref="InvalidOperationException">
-		/// Thrown if the handshake has already been completed.
+		/// Thrown if the call to this method was unexpected in the current state of this object.
 		/// </exception>
 		/// <exception cref="IOException">Thrown if an I/O error occurs.</exception>
 		/// <exception cref="NotSupportedException">Thrown if the stream does not support reading.</exception>
