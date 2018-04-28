@@ -331,6 +331,7 @@ namespace Noise
 
 		/// <summary>
 		/// Asynchronously writes the negotiation data and the empty handshake message to the input stream.
+		/// Called by the server when rejecting the initial protocol, or requesting a retry from the client.
 		/// </summary>
 		/// <param name="negotiationData">The negotiation data.</param>
 		/// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
