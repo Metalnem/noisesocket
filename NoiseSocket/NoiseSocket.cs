@@ -363,7 +363,7 @@ namespace Noise
 			}
 
 			SaveMessage(MessageType.WriteNegotiationData, negotiationData);
-			SaveMessage(MessageType.WriteNoiseMessage, Memory<byte>.Empty);
+			SaveMessage(MessageType.WriteNoiseMessage, Memory<byte>.Empty, false);
 
 			var message = new byte[LenFieldSize + negotiationData.Length + LenFieldSize];
 			WritePacket(negotiationData.Span, message);
@@ -440,7 +440,7 @@ namespace Noise
 			handshakeState = handshakeState ?? InitializeHandshakeState();
 
 			var noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
-			SaveMessage(MessageType.ReadNoiseMessage, noiseMessage);
+			SaveMessage(MessageType.ReadNoiseMessage, noiseMessage, false);
 
 			if (noiseMessage.Length == 0)
 			{
@@ -494,7 +494,7 @@ namespace Noise
 			}
 
 			var noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
-			SaveMessage(MessageType.ReadNoiseMessage, noiseMessage);
+			SaveMessage(MessageType.ReadNoiseMessage, noiseMessage, false);
 		}
 
 		/// <summary>
@@ -598,7 +598,7 @@ namespace Noise
 			return ReadPacket(noiseMessage.AsSpan(0, read));
 		}
 
-		private void SaveMessage(MessageType type, Memory<byte> data)
+		private void SaveMessage(MessageType type, Memory<byte> data, bool copy = true)
 		{
 			if (savedMessages != null)
 			{
@@ -613,7 +613,7 @@ namespace Noise
 				}
 				else
 				{
-					savedMessages.Add(new SavedMessage(type, data));
+					savedMessages.Add(new SavedMessage(type, copy ? data.ToArray() : data));
 					ThrowIfPrologueInvalid(false);
 				}
 			}
