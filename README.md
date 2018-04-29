@@ -6,9 +6,21 @@
 [![license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://raw.githubusercontent.com/metalnem/noisesocket/master/LICENSE)
 
 .NET Standard 1.3 implementation of the [NoiseSocket Protocol]
-(revision 2 of the spec). Work in progress.
+(revision 2 of the spec).
+
+
+>NoiseSocket provides an encoding layer for the
+>[Noise Protocol Framework]. NoiseSocket can encode Noise messages
+>and associated negotiation data into a form suitable for
+>transmission over reliable, stream-based protocols such as TCP.
+>
+>NoiseSocket doesn't specify the contents of negotiation data,
+>since different applications will encode and advertise protocol
+>support in different ways. NoiseSocket just defines a message
+>ormat to transport this data, and APIs to access it.
 
 [NoiseSocket Protocol]: https://noiseprotocol.org/specs/noisesocket.html
+[Noise Protocol Framework]: https://noiseprotocol.org/
 
 ## Samples
 
