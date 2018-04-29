@@ -10,6 +10,11 @@
 
 [NoiseSocket Protocol]: https://noiseprotocol.org/specs/noisesocket.html
 
+## Samples
+
+[Acceptance](https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket.Examples/AcceptExample.cs)
+[Switch protocol](https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket.Examples/SwitchExample.cs)
+
 ## Installation
 
 ```
