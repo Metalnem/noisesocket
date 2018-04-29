@@ -647,11 +647,6 @@ namespace Noise
 
 			prologue.CopyTo(next);
 
-			if (!allowReinitialization)
-			{
-				savedMessages = null;
-			}
-
 			return protocol.Create(
 				config.Initiator,
 				buffer,
