@@ -399,7 +399,7 @@ namespace Noise
 		{
 			ThrowIfDisposed();
 
-			if (transport != null)
+			if (transport != null && (!transport.IsOneWay || client))
 			{
 				string error = $"Cannot call {nameof(WriteEmptyHandshakeMessageAsync)} after the handshake has been completed.";
 				throw new InvalidOperationException(error);
