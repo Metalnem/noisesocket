@@ -12,8 +12,14 @@
 
 ## Samples
 
-[Acceptance](https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket.Examples/AcceptExample.cs)
-[Switch protocol](https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket.Examples/SwitchExample.cs)
+[Acceptance] (using [TcpClient] and [TcpListener])  
+[Switch protocol] (using ordinary [Socket])
+
+[Acceptance]: https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket.Examples/AcceptExample.cs
+[Switch protocol]: https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket.Examples/SwitchExample.cs
+[TcpClient]: https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.tcpclient?view=netstandard-2.0
+[TcpListener]: https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.tcplistener?view=netstandard-2.0
+[Socket]: https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=netstandard-2.0
 
 ## Installation
 
