@@ -1,4 +1,4 @@
-# NoiseSocket.NET
+![](NoiseSocket.png)
 
 [![Latest Version](https://img.shields.io/nuget/v/NoiseSocket.NET.svg)](https://www.nuget.org/packages/NoiseSocket.NET)
 [![Build Status](https://travis-ci.org/Metalnem/noisesocket.svg?branch=master)](https://travis-ci.org/Metalnem/noisesocket)
