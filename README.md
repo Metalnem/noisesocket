@@ -8,7 +8,6 @@
 .NET Standard 1.3 implementation of the [NoiseSocket Protocol]
 (revision 2 of the spec).
 
-
 >NoiseSocket provides an encoding layer for the
 >[Noise Protocol Framework]. NoiseSocket can encode Noise messages
 >and associated negotiation data into a form suitable for
@@ -36,5 +35,5 @@
 ## Installation
 
 ```
-> dotnet add package NoiseSocket.NET --version 0.2.0-preview
+> dotnet add package NoiseSocket.NET --version 0.3.0-preview
 ```
