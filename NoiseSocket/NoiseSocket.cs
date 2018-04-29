@@ -121,11 +121,15 @@ namespace Noise
 		/// Thrown if the current instance has already been disposed.
 		/// </exception>
 		/// <exception cref="InvalidOperationException">
-		/// Thrown if the handshake has already been completed
-		/// or if the protocol has already been changed once.
+		/// Thrown if the handshake has already been completed,
+		/// the protocol has already been changed once, or this
+		/// method was called by the client.
 		/// </exception>
 		/// <exception cref="ArgumentNullException">
 		/// Thrown if either <paramref name="protocol"/> or <paramref name="config"/> is null.
+		/// </exception>
+		/// <exception cref="ArgumentException">
+		/// Thrown if the server attempted to accept a new protocol as an initiator.
 		/// </exception>
 		/// <remarks>
 		/// This method can also throw all exceptions that <see cref="Protocol.Create(ProtocolConfig)"/>
@@ -133,8 +137,21 @@ namespace Noise
 		/// </remarks>
 		public void Accept(Protocol protocol, ProtocolConfig config)
 		{
-			noiseSocketInit = noiseSocketInit1;
-			Reinitialize(protocol, config);
+			ThrowIfDisposed();
+			ThrowIfNull(protocol, nameof(protocol));
+			ThrowIfNull(config, nameof(config));
+
+			if (client)
+			{
+				throw new InvalidOperationException($"{nameof(Accept)} can be called only by the server.");
+			}
+
+			if (!client && config.Initiator)
+			{
+				throw new ArgumentException("Server cannot accept a new protocol as an initiator.");
+			}
+
+			Reinitialize(protocol, config, noiseSocketInit1);
 		}
 
 		/// <summary>
@@ -151,10 +168,14 @@ namespace Noise
 		/// </exception>
 		/// <exception cref="InvalidOperationException">
 		/// Thrown if the handshake has already been completed
-		/// or if the protocol has already been changed once.
+		/// or the protocol has already been changed once.
 		/// </exception>
 		/// <exception cref="ArgumentNullException">
 		/// Thrown if either <paramref name="protocol"/> or <paramref name="config"/> is null.
+		/// </exception>
+		/// <exception cref="ArgumentException">
+		/// Thrown if the client attempted to switch to a new protocol as an initiator,
+		/// or the server attempted to switch to a new protocol as a responder.
 		/// </exception>
 		/// <remarks>
 		/// This method can also throw all exceptions that <see cref="Protocol.Create(ProtocolConfig)"/>
@@ -162,8 +183,21 @@ namespace Noise
 		/// </remarks>
 		public void Switch(Protocol protocol, ProtocolConfig config)
 		{
-			noiseSocketInit = noiseSocketInit2;
-			Reinitialize(protocol, config);
+			ThrowIfDisposed();
+			ThrowIfNull(protocol, nameof(protocol));
+			ThrowIfNull(config, nameof(config));
+
+			if (client && config.Initiator)
+			{
+				throw new ArgumentException("Client cannot switch to a new protocol as an initiator.");
+			}
+
+			if (!client && !config.Initiator)
+			{
+				throw new ArgumentException("Server cannot switch to a new protocol as a responder.");
+			}
+
+			Reinitialize(protocol, config, noiseSocketInit2);
 		}
 
 		/// <summary>
@@ -180,10 +214,14 @@ namespace Noise
 		/// </exception>
 		/// <exception cref="InvalidOperationException">
 		/// Thrown if the handshake has already been completed
-		/// or if the protocol has already been changed once.
+		/// or the protocol has already been changed once.
 		/// </exception>
 		/// <exception cref="ArgumentNullException">
 		/// Thrown if either <paramref name="protocol"/> or <paramref name="config"/> is null.
+		/// </exception>
+		/// <exception cref="ArgumentException">
+		/// Thrown if the client attempted to retry with a new protocol as a responder,
+		/// or the server attempted to retry with a new protocol as an initiator.
 		/// </exception>
 		/// <remarks>
 		/// This method can also throw all exceptions that <see cref="Protocol.Create(ProtocolConfig)"/>
@@ -191,14 +229,25 @@ namespace Noise
 		/// </remarks>
 		public void Retry(Protocol protocol, ProtocolConfig config)
 		{
-			noiseSocketInit = noiseSocketInit3;
-			Reinitialize(protocol, config);
+			ThrowIfDisposed();
+			ThrowIfNull(protocol, nameof(protocol));
+			ThrowIfNull(config, nameof(config));
+
+			if (client && !config.Initiator)
+			{
+				throw new ArgumentException("Client cannot retry with a new protocol as a responder.");
+			}
+
+			if (!client && config.Initiator)
+			{
+				throw new ArgumentException("Server cannot retry with a new protocol as an initiator.");
+			}
+
+			Reinitialize(protocol, config, noiseSocketInit3);
 		}
 
-		private void Reinitialize(Protocol protocol, ProtocolConfig config)
+		private void Reinitialize(Protocol protocol, ProtocolConfig config, byte[] noiseSocketInit)
 		{
-			ThrowIfDisposed();
-
 			if (transport != null)
 			{
 				throw new InvalidOperationException($"Cannot change protocol after the handshake has been completed.");
@@ -209,11 +258,9 @@ namespace Noise
 				throw new InvalidOperationException($"Cannot change protocol more than once.");
 			}
 
-			ThrowIfNull(protocol, nameof(protocol));
-			ThrowIfNull(config, nameof(config));
-
 			this.protocol = protocol;
 			this.config = config;
+			this.noiseSocketInit = noiseSocketInit;
 
 			if (handshakeState != null)
 			{
