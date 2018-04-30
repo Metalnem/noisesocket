@@ -16,7 +16,7 @@
 >NoiseSocket doesn't specify the contents of negotiation data,
 >since different applications will encode and advertise protocol
 >support in different ways. NoiseSocket just defines a message
->ormat to transport this data, and APIs to access it.
+>format to transport this data, and APIs to access it.
 
 [NoiseSocket Protocol]: https://noiseprotocol.org/specs/noisesocket.html
 [Noise Protocol Framework]: https://noiseprotocol.org/
