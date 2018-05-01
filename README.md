@@ -3,7 +3,7 @@
 [![Latest Version](https://img.shields.io/nuget/v/NoiseSocket.NET.svg)](https://www.nuget.org/packages/NoiseSocket.NET)
 [![Build Status](https://travis-ci.org/Metalnem/noisesocket.svg?branch=master)](https://travis-ci.org/Metalnem/noisesocket)
 [![Build status](https://ci.appveyor.com/api/projects/status/i52hlnib699m5lra?svg=true)](https://ci.appveyor.com/project/Metalnem/noisesocket)
-[![Docs](https://img.shields.io/badge/docs-API-orange.svg?style=flat)](https://metalnem.github.io/noisesocketdocs/api/Noise.NoiseSocket.html)
+[![Docs](https://img.shields.io/badge/docs-API-orange.svg?style=flat)](https://metalnem.github.io/noisesocket/api/Noise.NoiseSocket.html)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://raw.githubusercontent.com/metalnem/noisesocket/master/LICENSE)
 
 .NET Standard 1.3 implementation of the [NoiseSocket Protocol]
