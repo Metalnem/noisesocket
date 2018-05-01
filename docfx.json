@@ -28,13 +28,13 @@
 		"resource": [
 			{
 				"files": [
-					"**.png"
+					"NoiseSocket.png"
 				]
 			}
 		],
 		"dest": "_site",
 		"template": [
-			"default"
+			"statictoc"
 		],
 		"markdownEngineName": "markdig"
 	}
