@@ -1,0 +1,1272 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class NoiseSocket
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class NoiseSocket
+   ">
+    <meta name="generator" content="docfx 2.35.2.0">
+    
+    <link rel="shortcut icon" href="../favicon.ico">
+    <link rel="stylesheet" href="../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../styles/docfx.css">
+    <link rel="stylesheet" href="../styles/main.css">
+    <meta property="docfx:navrel" content="../toc">
+    <meta property="docfx:tocrel" content="toc">
+    
+    
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../index.html">
+                <img id="logo" class="svg" src="../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+                <ul class="nav level1 navbar-nav">
+                  <li class="active">
+                    <a href="../api/Noise.html" title="API Reference" class="active">API Reference</a>
+                  </li>
+                </ul>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div>
+              <div class="sidefilter">
+                <form class="toc-filter">
+                  <span class="glyphicon glyphicon-filter filter-icon"></span>
+                  <input type="text" id="toc_filter_input" placeholder="Enter here to filter..." onkeypress="if(event.keyCode==13) {return false;}">
+                </form>
+              </div>
+              <div class="sidetoc">
+                <div class="toc" id="toc">
+                  
+                  <ul class="nav level1">
+                    <li class="">
+                      <span class="expand-stub"></span>
+                      <a href="Noise.html" title="Noise" class="">Noise</a>
+                        
+                        <ul class="nav level2">
+                          <li class="active">
+                            <a href="Noise.NoiseSocket.html" title="NoiseSocket" class="active">NoiseSocket</a>
+                          </li>
+                        </ul>  </li>
+                  </ul>        </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Noise.NoiseSocket">
+  
+  
+  <h1 id="Noise_NoiseSocket" data-uid="Noise.NoiseSocket" class="text-break">Class NoiseSocket
+  </h1>
+  <div class="markdown level0 summary"><p>NoiseSocket provides an encoding layer for the Noise Protocol
+Framework. NoiseSocket can encode Noise messages and associated
+negotiation data into a form suitable for transmission over
+reliable, stream-based protocols such as TCP.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><span class="xref">NoiseSocket</span></div>
+  </div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><span class="xref">System.IDisposable</span></div>
+  </div>
+  <div class="inheritedMembers">
+    <h5>Inherited Members</h5>
+    <div>
+      <span class="xref">System.Object.Equals(System.Object)</span>
+    </div>
+    <div>
+      <span class="xref">System.Object.Equals(System.Object, System.Object)</span>
+    </div>
+    <div>
+      <span class="xref">System.Object.GetHashCode()</span>
+    </div>
+    <div>
+      <span class="xref">System.Object.GetType()</span>
+    </div>
+    <div>
+      <span class="xref">System.Object.MemberwiseClone()</span>
+    </div>
+    <div>
+      <span class="xref">System.Object.ReferenceEquals(System.Object, System.Object)</span>
+    </div>
+    <div>
+      <span class="xref">System.Object.ToString()</span>
+    </div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Noise.html">Noise</a></h6>
+  <h6><strong>Assembly</strong>: NoiseSocket.dll</h6>
+  <h5 id="Noise_NoiseSocket_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public sealed class NoiseSocket : IDisposable</code></pre>
+  </div>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_Accept_Noise_Protocol_Noise_ProtocolConfig_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.Accept(Noise.Protocol%2CNoise.ProtocolConfig)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L138">View Source</a>
+  </span>
+  <a id="Noise_NoiseSocket_Accept_" data-uid="Noise.NoiseSocket.Accept*"></a>
+  <h4 id="Noise_NoiseSocket_Accept_Noise_Protocol_Noise_ProtocolConfig_" data-uid="Noise.NoiseSocket.Accept(Noise.Protocol,Noise.ProtocolConfig)">Accept(Protocol, ProtocolConfig)</h4>
+  <div class="markdown level1 summary"><p>Initializes the current instance of the <a class="xref" href="Noise.NoiseSocket.html">NoiseSocket</a>
+class with an initiator's choice of the Noise protocol.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Accept(Protocol protocol, ProtocolConfig config)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Noise.Protocol</span></td>
+        <td><span class="parametername">protocol</span></td>
+        <td><p>A concrete Noise protocol (e.g. Noise_XX_25519_AESGCM_BLAKE2b).</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">Noise.ProtocolConfig</span></td>
+        <td><span class="parametername">config</span></td>
+        <td><p>A set of parameters used to instantiate a <span class="xref">Noise.HandshakeState</span>.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Noise_NoiseSocket_Accept_Noise_Protocol_Noise_ProtocolConfig__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This method can also throw all exceptions that <span class="xref">Noise.Protocol.Create(Noise.ProtocolConfig)</span>
+method can throw. See the <span class="xref">Noise.Protocol</span> class documentation for more details.</p>
+</div>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ObjectDisposedException</span></td>
+        <td><p>Thrown if the current instance has already been disposed.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.InvalidOperationException</span></td>
+        <td><p>Thrown if the handshake has already been completed,
+the protocol has already been changed once, or this
+method was called by the client.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.ArgumentNullException</span></td>
+        <td><p>Thrown if either <code data-dev-comment-type="paramref" class="paramref">protocol</code> or <code data-dev-comment-type="paramref" class="paramref">config</code> is null.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.ArgumentException</span></td>
+        <td><p>Thrown if the server attempted to accept a new protocol as an initiator.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_CreateClient_Noise_Protocol_Noise_ProtocolConfig_System_IO_Stream_System_Boolean_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.CreateClient(Noise.Protocol%2CNoise.ProtocolConfig%2CSystem.IO.Stream%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L79">View Source</a>
+  </span>
+  <a id="Noise_NoiseSocket_CreateClient_" data-uid="Noise.NoiseSocket.CreateClient*"></a>
+  <h4 id="Noise_NoiseSocket_CreateClient_Noise_Protocol_Noise_ProtocolConfig_System_IO_Stream_System_Boolean_" data-uid="Noise.NoiseSocket.CreateClient(Noise.Protocol,Noise.ProtocolConfig,System.IO.Stream,System.Boolean)">CreateClient(Protocol, ProtocolConfig, Stream, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Initializes a new client instance of the <a class="xref" href="Noise.NoiseSocket.html">NoiseSocket</a> class.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static NoiseSocket CreateClient(Protocol protocol, ProtocolConfig config, Stream stream, bool leaveOpen = false)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Noise.Protocol</span></td>
+        <td><span class="parametername">protocol</span></td>
+        <td><p>A concrete Noise protocol (e.g. Noise_XX_25519_AESGCM_BLAKE2b).</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">Noise.ProtocolConfig</span></td>
+        <td><span class="parametername">config</span></td>
+        <td><p>A set of parameters used to instantiate an initial <span class="xref">Noise.HandshakeState</span>.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.IO.Stream</span></td>
+        <td><span class="parametername">stream</span></td>
+        <td><p>The stream for reading and writing encoded protocol messages.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">leaveOpen</span></td>
+        <td><p>True to leave the stream open after the
+<a class="xref" href="Noise.NoiseSocket.html">NoiseSocket</a> object is disposed, false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Noise.NoiseSocket.html">NoiseSocket</a></td>
+        <td><p>The new <a class="xref" href="Noise.NoiseSocket.html">NoiseSocket</a> client.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ArgumentNullException</span></td>
+        <td><p>Thrown if either <code data-dev-comment-type="paramref" class="paramref">protocol</code>,
+<code data-dev-comment-type="paramref" class="paramref">config</code>, or <code data-dev-comment-type="paramref" class="paramref">stream</code> is null.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.ArgumentException</span></td>
+        <td><p>Thrown if the client was initialized as a Noise protocol responder.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_CreateServer_System_IO_Stream_System_Boolean_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.CreateServer(System.IO.Stream%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L105">View Source</a>
+  </span>
+  <a id="Noise_NoiseSocket_CreateServer_" data-uid="Noise.NoiseSocket.CreateServer*"></a>
+  <h4 id="Noise_NoiseSocket_CreateServer_System_IO_Stream_System_Boolean_" data-uid="Noise.NoiseSocket.CreateServer(System.IO.Stream,System.Boolean)">CreateServer(Stream, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Initializes a new server instance of the <a class="xref" href="Noise.NoiseSocket.html">NoiseSocket</a> class.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static NoiseSocket CreateServer(Stream stream, bool leaveOpen = false)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.IO.Stream</span></td>
+        <td><span class="parametername">stream</span></td>
+        <td><p>The stream for reading and writing encoded protocol messages.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">leaveOpen</span></td>
+        <td><p>True to leave the stream open after the
+<a class="xref" href="Noise.NoiseSocket.html">NoiseSocket</a> object is disposed, false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Noise.NoiseSocket.html">NoiseSocket</a></td>
+        <td><p>The new <a class="xref" href="Noise.NoiseSocket.html">NoiseSocket</a> server.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ArgumentNullException</span></td>
+        <td><p>Thrown if <code data-dev-comment-type="paramref" class="paramref">stream</code> is null.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_Dispose.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.Dispose%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L826">View Source</a>
+  </span>
+  <a id="Noise_NoiseSocket_Dispose_" data-uid="Noise.NoiseSocket.Dispose*"></a>
+  <h4 id="Noise_NoiseSocket_Dispose" data-uid="Noise.NoiseSocket.Dispose">Dispose()</h4>
+  <div class="markdown level1 summary"><p>Releases all resources used by the current
+instance of the <a class="xref" href="Noise.NoiseSocket.html">NoiseSocket</a> class.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Dispose()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_IgnoreHandshakeMessageAsync_System_Threading_CancellationToken_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.IgnoreHandshakeMessageAsync(System.Threading.CancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L534">View Source</a>
+  </span>
+  <a id="Noise_NoiseSocket_IgnoreHandshakeMessageAsync_" data-uid="Noise.NoiseSocket.IgnoreHandshakeMessageAsync*"></a>
+  <h4 id="Noise_NoiseSocket_IgnoreHandshakeMessageAsync_System_Threading_CancellationToken_" data-uid="Noise.NoiseSocket.IgnoreHandshakeMessageAsync(System.Threading.CancellationToken)">IgnoreHandshakeMessageAsync(CancellationToken)</h4>
+  <div class="markdown level1 summary"><p>Asynchronously consumes the handshake message from
+the input stream without attempting to decrypt it.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task IgnoreHandshakeMessageAsync(CancellationToken cancellationToken = default(CancellationToken))</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Threading.CancellationToken</span></td>
+        <td><span class="parametername">cancellationToken</span></td>
+        <td><p>The token to monitor for cancellation requests.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Threading.Tasks.Task</span></td>
+        <td><p>A task that represents the asynchronous read operation.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ObjectDisposedException</span></td>
+        <td><p>Thrown if either the current instance, or the input stream has already been disposed.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.InvalidOperationException</span></td>
+        <td><p>Thrown if the call to this method was unexpected in the current state of this object.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.IO.IOException</span></td>
+        <td><p>Thrown if an I/O error occurs.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.NotSupportedException</span></td>
+        <td><p>Thrown if the stream does not support reading.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_ReadHandshakeMessageAsync_System_Threading_CancellationToken_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.ReadHandshakeMessageAsync(System.Threading.CancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L479">View Source</a>
+  </span>
+  <a id="Noise_NoiseSocket_ReadHandshakeMessageAsync_" data-uid="Noise.NoiseSocket.ReadHandshakeMessageAsync*"></a>
+  <h4 id="Noise_NoiseSocket_ReadHandshakeMessageAsync_System_Threading_CancellationToken_" data-uid="Noise.NoiseSocket.ReadHandshakeMessageAsync(System.Threading.CancellationToken)">ReadHandshakeMessageAsync(CancellationToken)</h4>
+  <div class="markdown level1 summary"><p>Asynchronously reads the handshake message from the input stream.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;byte[]&gt; ReadHandshakeMessageAsync(CancellationToken cancellationToken = default(CancellationToken))</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Threading.CancellationToken</span></td>
+        <td><span class="parametername">cancellationToken</span></td>
+        <td><p>The token to monitor for cancellation requests.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Threading.Tasks.Task</span>&lt;<span class="xref">System.Byte</span>[]&gt;</td>
+        <td><p>A task that represents the asynchronous read operation.
+The result of the task contains the decrypted message body.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Noise_NoiseSocket_ReadHandshakeMessageAsync_System_Threading_CancellationToken__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This method can also throw all exceptions that <span class="xref">Noise.Protocol.Create(Noise.ProtocolConfig)</span>
+method can throw. See the <span class="xref">Noise.Protocol</span> class documentation for more details.</p>
+</div>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ObjectDisposedException</span></td>
+        <td><p>Thrown if either the current instance, or the input stream has already been disposed.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.InvalidOperationException</span></td>
+        <td><p>Thrown if the call to this method was unexpected in the current state of this object.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.ArgumentException</span></td>
+        <td><p>Thrown if the decrypted message body length was invalid.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Security.Cryptography.CryptographicException</span></td>
+        <td><p>Thrown if the decryption of the message has failed.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.IO.IOException</span></td>
+        <td><p>Thrown if an I/O error occurs.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.NotSupportedException</span></td>
+        <td><p>Thrown if the stream does not support reading.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_ReadMessageAsync_System_Threading_CancellationToken_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.ReadMessageAsync(System.Threading.CancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L627">View Source</a>
+  </span>
+  <a id="Noise_NoiseSocket_ReadMessageAsync_" data-uid="Noise.NoiseSocket.ReadMessageAsync*"></a>
+  <h4 id="Noise_NoiseSocket_ReadMessageAsync_System_Threading_CancellationToken_" data-uid="Noise.NoiseSocket.ReadMessageAsync(System.Threading.CancellationToken)">ReadMessageAsync(CancellationToken)</h4>
+  <div class="markdown level1 summary"><p>Asynchronously reads the transport message from the input stream.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;byte[]&gt; ReadMessageAsync(CancellationToken cancellationToken = default(CancellationToken))</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Threading.CancellationToken</span></td>
+        <td><span class="parametername">cancellationToken</span></td>
+        <td><p>The token to monitor for cancellation requests.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Threading.Tasks.Task</span>&lt;<span class="xref">System.Byte</span>[]&gt;</td>
+        <td><p>A task that represents the asynchronous read operation.
+The result of the task contains the decrypted message body.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ObjectDisposedException</span></td>
+        <td><p>Thrown if either the current instance, or the input stream has already been disposed.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.InvalidOperationException</span></td>
+        <td><p>Thrown if the handshake has not yet been completed, or the
+initiator has attempted to read a message from a one-way stream.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.ArgumentException</span></td>
+        <td><p>Thrown if the decrypted message body length was invalid.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Security.Cryptography.CryptographicException</span></td>
+        <td><p>Thrown if the decryption of the message has failed.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.IO.IOException</span></td>
+        <td><p>Thrown if an I/O error occurs.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.NotSupportedException</span></td>
+        <td><p>Thrown if the stream does not support reading.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_ReadNegotiationDataAsync_System_Threading_CancellationToken_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.ReadNegotiationDataAsync(System.Threading.CancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L438">View Source</a>
+  </span>
+  <a id="Noise_NoiseSocket_ReadNegotiationDataAsync_" data-uid="Noise.NoiseSocket.ReadNegotiationDataAsync*"></a>
+  <h4 id="Noise_NoiseSocket_ReadNegotiationDataAsync_System_Threading_CancellationToken_" data-uid="Noise.NoiseSocket.ReadNegotiationDataAsync(System.Threading.CancellationToken)">ReadNegotiationDataAsync(CancellationToken)</h4>
+  <div class="markdown level1 summary"><p>Asynchronously reads the negotiation data from the input stream.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;byte[]&gt; ReadNegotiationDataAsync(CancellationToken cancellationToken = default(CancellationToken))</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Threading.CancellationToken</span></td>
+        <td><span class="parametername">cancellationToken</span></td>
+        <td><p>The token to monitor for cancellation requests.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Threading.Tasks.Task</span>&lt;<span class="xref">System.Byte</span>[]&gt;</td>
+        <td><p>A task that represents the asynchronous read operation.
+The result of the task contains the negotiation data.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ObjectDisposedException</span></td>
+        <td><p>Thrown if either the current instance, or the input stream has already been disposed.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.InvalidOperationException</span></td>
+        <td><p>Thrown if the call to this method was unexpected in the current state of this object.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.IO.IOException</span></td>
+        <td><p>Thrown if an I/O error occurs.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.NotSupportedException</span></td>
+        <td><p>Thrown if the stream does not support reading.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_Retry_Noise_Protocol_Noise_ProtocolConfig_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.Retry(Noise.Protocol%2CNoise.ProtocolConfig)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L230">View Source</a>
+  </span>
+  <a id="Noise_NoiseSocket_Retry_" data-uid="Noise.NoiseSocket.Retry*"></a>
+  <h4 id="Noise_NoiseSocket_Retry_Noise_Protocol_Noise_ProtocolConfig_" data-uid="Noise.NoiseSocket.Retry(Noise.Protocol,Noise.ProtocolConfig)">Retry(Protocol, ProtocolConfig)</h4>
+  <div class="markdown level1 summary"><p>Reinitializes the current instance of the <a class="xref" href="Noise.NoiseSocket.html">NoiseSocket</a>
+class with a new Noise protocol, different from the initial Noise protocol.
+The reason for the reinitialization was responder's retry request.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Retry(Protocol protocol, ProtocolConfig config)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Noise.Protocol</span></td>
+        <td><span class="parametername">protocol</span></td>
+        <td><p>A concrete Noise protocol (e.g. Noise_XX_25519_AESGCM_BLAKE2b).</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">Noise.ProtocolConfig</span></td>
+        <td><span class="parametername">config</span></td>
+        <td><p>A set of parameters used to instantiate a <span class="xref">Noise.HandshakeState</span>.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Noise_NoiseSocket_Retry_Noise_Protocol_Noise_ProtocolConfig__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This method can also throw all exceptions that <span class="xref">Noise.Protocol.Create(Noise.ProtocolConfig)</span>
+method can throw. See the <span class="xref">Noise.Protocol</span> class documentation for more details.</p>
+</div>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ObjectDisposedException</span></td>
+        <td><p>Thrown if the current instance has already been disposed.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.InvalidOperationException</span></td>
+        <td><p>Thrown if the handshake has already been completed
+or the protocol has already been changed once.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.ArgumentNullException</span></td>
+        <td><p>Thrown if either <code data-dev-comment-type="paramref" class="paramref">protocol</code> or <code data-dev-comment-type="paramref" class="paramref">config</code> is null.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.ArgumentException</span></td>
+        <td><p>Thrown if the client attempted to retry with a new protocol as a responder,
+or the server attempted to retry with a new protocol as an initiator.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_Switch_Noise_Protocol_Noise_ProtocolConfig_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.Switch(Noise.Protocol%2CNoise.ProtocolConfig)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L184">View Source</a>
+  </span>
+  <a id="Noise_NoiseSocket_Switch_" data-uid="Noise.NoiseSocket.Switch*"></a>
+  <h4 id="Noise_NoiseSocket_Switch_Noise_Protocol_Noise_ProtocolConfig_" data-uid="Noise.NoiseSocket.Switch(Noise.Protocol,Noise.ProtocolConfig)">Switch(Protocol, ProtocolConfig)</h4>
+  <div class="markdown level1 summary"><p>Reinitializes the current instance of the <a class="xref" href="Noise.NoiseSocket.html">NoiseSocket</a>
+class with a new Noise protocol, different from the initial Noise protocol.
+The reason for the reinitialization was responder's decision to switch protocol.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Switch(Protocol protocol, ProtocolConfig config)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Noise.Protocol</span></td>
+        <td><span class="parametername">protocol</span></td>
+        <td><p>A concrete Noise protocol (e.g. Noise_XX_25519_AESGCM_BLAKE2b).</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">Noise.ProtocolConfig</span></td>
+        <td><span class="parametername">config</span></td>
+        <td><p>A set of parameters used to instantiate a <span class="xref">Noise.HandshakeState</span>.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Noise_NoiseSocket_Switch_Noise_Protocol_Noise_ProtocolConfig__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This method can also throw all exceptions that <span class="xref">Noise.Protocol.Create(Noise.ProtocolConfig)</span>
+method can throw. See the <span class="xref">Noise.Protocol</span> class documentation for more details.</p>
+</div>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ObjectDisposedException</span></td>
+        <td><p>Thrown if the current instance has already been disposed.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.InvalidOperationException</span></td>
+        <td><p>Thrown if the handshake has already been completed
+or the protocol has already been changed once.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.ArgumentNullException</span></td>
+        <td><p>Thrown if either <code data-dev-comment-type="paramref" class="paramref">protocol</code> or <code data-dev-comment-type="paramref" class="paramref">config</code> is null.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.ArgumentException</span></td>
+        <td><p>Thrown if the client attempted to switch to a new protocol as an initiator,
+or the server attempted to switch to a new protocol as a responder.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_WriteEmptyHandshakeMessageAsync_System_Memory_System_Byte__System_Threading_CancellationToken_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.WriteEmptyHandshakeMessageAsync(System.Memory%7BSystem.Byte%7D%2CSystem.Threading.CancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L398">View Source</a>
+  </span>
+  <a id="Noise_NoiseSocket_WriteEmptyHandshakeMessageAsync_" data-uid="Noise.NoiseSocket.WriteEmptyHandshakeMessageAsync*"></a>
+  <h4 id="Noise_NoiseSocket_WriteEmptyHandshakeMessageAsync_System_Memory_System_Byte__System_Threading_CancellationToken_" data-uid="Noise.NoiseSocket.WriteEmptyHandshakeMessageAsync(System.Memory{System.Byte},System.Threading.CancellationToken)">WriteEmptyHandshakeMessageAsync(Memory&lt;Byte&gt;, CancellationToken)</h4>
+  <div class="markdown level1 summary"><p>Asynchronously writes the negotiation data and the empty handshake message to the input stream.
+Called by the server when rejecting the initial protocol, or requesting a retry from the client.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task WriteEmptyHandshakeMessageAsync(Memory&lt;byte&gt; negotiationData, CancellationToken cancellationToken = default(CancellationToken))</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Memory</span>&lt;<span class="xref">System.Byte</span>&gt;</td>
+        <td><span class="parametername">negotiationData</span></td>
+        <td><p>The negotiation data.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Threading.CancellationToken</span></td>
+        <td><span class="parametername">cancellationToken</span></td>
+        <td><p>The token to monitor for cancellation requests.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Threading.Tasks.Task</span></td>
+        <td><p>A task that represents the asynchronous write operation.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ObjectDisposedException</span></td>
+        <td><p>Thrown if either the current instance, or the output stream has already been disposed.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.InvalidOperationException</span></td>
+        <td><p>Thrown if the call to this method was unexpected in the current state of this object.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.ArgumentException</span></td>
+        <td><p>Thrown if the negotiation data was greater than
+<span class="xref">Noise.Protocol.MaxMessageLength</span> bytes in length.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.IO.IOException</span></td>
+        <td><p>Thrown if an I/O error occurs.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.NotSupportedException</span></td>
+        <td><p>Thrown if the stream does not support reading.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_WriteHandshakeMessageAsync_System_Memory_System_Byte__System_Memory_System_Byte__System_UInt16_System_Threading_CancellationToken_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.WriteHandshakeMessageAsync(System.Memory%7BSystem.Byte%7D%2CSystem.Memory%7BSystem.Byte%7D%2CSystem.UInt16%2CSystem.Threading.CancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L304">View Source</a>
+  </span>
+  <a id="Noise_NoiseSocket_WriteHandshakeMessageAsync_" data-uid="Noise.NoiseSocket.WriteHandshakeMessageAsync*"></a>
+  <h4 id="Noise_NoiseSocket_WriteHandshakeMessageAsync_System_Memory_System_Byte__System_Memory_System_Byte__System_UInt16_System_Threading_CancellationToken_" data-uid="Noise.NoiseSocket.WriteHandshakeMessageAsync(System.Memory{System.Byte},System.Memory{System.Byte},System.UInt16,System.Threading.CancellationToken)">WriteHandshakeMessageAsync(Memory&lt;Byte&gt;, Memory&lt;Byte&gt;, UInt16, CancellationToken)</h4>
+  <div class="markdown level1 summary"><p>Asynchronously writes the negotiation data and the handshake message to the input stream.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task WriteHandshakeMessageAsync(Memory&lt;byte&gt; negotiationData = default(Memory&lt;byte&gt;), Memory&lt;byte&gt; messageBody = default(Memory&lt;byte&gt;), ushort paddedLength = 0, CancellationToken cancellationToken = default(CancellationToken))</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Memory</span>&lt;<span class="xref">System.Byte</span>&gt;</td>
+        <td><span class="parametername">negotiationData</span></td>
+        <td><p>The negotiation data.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Memory</span>&lt;<span class="xref">System.Byte</span>&gt;</td>
+        <td><span class="parametername">messageBody</span></td>
+        <td><p>The message body to encrypt.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.UInt16</span></td>
+        <td><span class="parametername">paddedLength</span></td>
+        <td><p>If this message has an encrypted payload and the length of the
+<code data-dev-comment-type="paramref" class="paramref">messageBody</code> is less than <code data-dev-comment-type="paramref" class="paramref">paddedLength</code>,
+<code data-dev-comment-type="paramref" class="paramref">messageBody</code> is padded to make its
+length equal to <code data-dev-comment-type="paramref" class="paramref">paddedLength</code>.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Threading.CancellationToken</span></td>
+        <td><span class="parametername">cancellationToken</span></td>
+        <td><p>The token to monitor for cancellation requests.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Threading.Tasks.Task</span></td>
+        <td><p>A task that represents the asynchronous write operation.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Noise_NoiseSocket_WriteHandshakeMessageAsync_System_Memory_System_Byte__System_Memory_System_Byte__System_UInt16_System_Threading_CancellationToken__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This method can also throw all exceptions that <span class="xref">Noise.Protocol.Create(Noise.ProtocolConfig)</span>
+method can throw. See the <span class="xref">Noise.Protocol</span> class documentation for more details.</p>
+</div>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ObjectDisposedException</span></td>
+        <td><p>Thrown if either the current instance, or the output stream has already been disposed.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.InvalidOperationException</span></td>
+        <td><p>Thrown if the call to this method was unexpected in the current state of this object.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.ArgumentException</span></td>
+        <td><p>Thrown if either the negotiation data, or the Noise message was greater
+than <span class="xref">Noise.Protocol.MaxMessageLength</span> bytes in length.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.IO.IOException</span></td>
+        <td><p>Thrown if an I/O error occurs.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.NotSupportedException</span></td>
+        <td><p>Thrown if the stream does not support reading.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_WriteMessageAsync_System_Memory_System_Byte__System_UInt16_System_Threading_CancellationToken_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.WriteMessageAsync(System.Memory%7BSystem.Byte%7D%2CSystem.UInt16%2CSystem.Threading.CancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L572">View Source</a>
+  </span>
+  <a id="Noise_NoiseSocket_WriteMessageAsync_" data-uid="Noise.NoiseSocket.WriteMessageAsync*"></a>
+  <h4 id="Noise_NoiseSocket_WriteMessageAsync_System_Memory_System_Byte__System_UInt16_System_Threading_CancellationToken_" data-uid="Noise.NoiseSocket.WriteMessageAsync(System.Memory{System.Byte},System.UInt16,System.Threading.CancellationToken)">WriteMessageAsync(Memory&lt;Byte&gt;, UInt16, CancellationToken)</h4>
+  <div class="markdown level1 summary"><p>Asynchronously writes the transport message to the input stream.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task WriteMessageAsync(Memory&lt;byte&gt; messageBody, ushort paddedLength = 0, CancellationToken cancellationToken = default(CancellationToken))</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Memory</span>&lt;<span class="xref">System.Byte</span>&gt;</td>
+        <td><span class="parametername">messageBody</span></td>
+        <td><p>The message body to encrypt.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.UInt16</span></td>
+        <td><span class="parametername">paddedLength</span></td>
+        <td><p>If the length of the <code data-dev-comment-type="paramref" class="paramref">messageBody</code> is less than
+<code data-dev-comment-type="paramref" class="paramref">paddedLength</code>, <code data-dev-comment-type="paramref" class="paramref">messageBody</code>
+is padded to make its length equal to <code data-dev-comment-type="paramref" class="paramref">paddedLength</code>.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Threading.CancellationToken</span></td>
+        <td><span class="parametername">cancellationToken</span></td>
+        <td><p>The token to monitor for cancellation requests.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Threading.Tasks.Task</span></td>
+        <td><p>A task that represents the asynchronous write operation.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ObjectDisposedException</span></td>
+        <td><p>Thrown if either the current instance, or the output stream has already been disposed.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.InvalidOperationException</span></td>
+        <td><p>Thrown if the handshake has not yet been completed, or the
+responder has attempted to write a message to a one-way stream.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.ArgumentException</span></td>
+        <td><p>Thrown if the encrypted payload was greater than
+<span class="xref">Noise.Protocol.MaxMessageLength</span> bytes in length.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.IO.IOException</span></td>
+        <td><p>Thrown if an I/O error occurs.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.NotSupportedException</span></td>
+        <td><p>Thrown if the stream does not support writing.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <span class="xref">System.IDisposable</span>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L20" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../styles/docfx.js"></script>
+    <script type="text/javascript" src="../styles/main.js"></script>
+  </body>
+</html>

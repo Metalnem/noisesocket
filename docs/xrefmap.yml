@@ -1,0 +1,193 @@
+### YamlMime:XRefMap
+sorted: true
+references:
+- uid: Noise
+  name: Noise
+  href: api/Noise.html
+  commentId: N:Noise
+  fullName: Noise
+  nameWithType: Noise
+- uid: Noise.NoiseSocket
+  name: NoiseSocket
+  href: api/Noise.NoiseSocket.html
+  commentId: T:Noise.NoiseSocket
+  fullName: Noise.NoiseSocket
+  nameWithType: NoiseSocket
+- uid: Noise.NoiseSocket.Accept(Noise.Protocol,Noise.ProtocolConfig)
+  name: Accept(Protocol, ProtocolConfig)
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_Accept_Noise_Protocol_Noise_ProtocolConfig_
+  commentId: M:Noise.NoiseSocket.Accept(Noise.Protocol,Noise.ProtocolConfig)
+  fullName: Noise.NoiseSocket.Accept(Noise.Protocol, Noise.ProtocolConfig)
+  nameWithType: NoiseSocket.Accept(Protocol, ProtocolConfig)
+- uid: Noise.NoiseSocket.Accept*
+  name: Accept
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_Accept_
+  commentId: Overload:Noise.NoiseSocket.Accept
+  isSpec: "True"
+  fullName: Noise.NoiseSocket.Accept
+  nameWithType: NoiseSocket.Accept
+- uid: Noise.NoiseSocket.CreateClient(Noise.Protocol,Noise.ProtocolConfig,System.IO.Stream,System.Boolean)
+  name: CreateClient(Protocol, ProtocolConfig, Stream, Boolean)
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_CreateClient_Noise_Protocol_Noise_ProtocolConfig_System_IO_Stream_System_Boolean_
+  commentId: M:Noise.NoiseSocket.CreateClient(Noise.Protocol,Noise.ProtocolConfig,System.IO.Stream,System.Boolean)
+  fullName: Noise.NoiseSocket.CreateClient(Noise.Protocol, Noise.ProtocolConfig, System.IO.Stream, System.Boolean)
+  nameWithType: NoiseSocket.CreateClient(Protocol, ProtocolConfig, Stream, Boolean)
+- uid: Noise.NoiseSocket.CreateClient*
+  name: CreateClient
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_CreateClient_
+  commentId: Overload:Noise.NoiseSocket.CreateClient
+  isSpec: "True"
+  fullName: Noise.NoiseSocket.CreateClient
+  nameWithType: NoiseSocket.CreateClient
+- uid: Noise.NoiseSocket.CreateServer(System.IO.Stream,System.Boolean)
+  name: CreateServer(Stream, Boolean)
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_CreateServer_System_IO_Stream_System_Boolean_
+  commentId: M:Noise.NoiseSocket.CreateServer(System.IO.Stream,System.Boolean)
+  fullName: Noise.NoiseSocket.CreateServer(System.IO.Stream, System.Boolean)
+  nameWithType: NoiseSocket.CreateServer(Stream, Boolean)
+- uid: Noise.NoiseSocket.CreateServer*
+  name: CreateServer
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_CreateServer_
+  commentId: Overload:Noise.NoiseSocket.CreateServer
+  isSpec: "True"
+  fullName: Noise.NoiseSocket.CreateServer
+  nameWithType: NoiseSocket.CreateServer
+- uid: Noise.NoiseSocket.Dispose
+  name: Dispose()
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_Dispose
+  commentId: M:Noise.NoiseSocket.Dispose
+  fullName: Noise.NoiseSocket.Dispose()
+  nameWithType: NoiseSocket.Dispose()
+- uid: Noise.NoiseSocket.Dispose*
+  name: Dispose
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_Dispose_
+  commentId: Overload:Noise.NoiseSocket.Dispose
+  isSpec: "True"
+  fullName: Noise.NoiseSocket.Dispose
+  nameWithType: NoiseSocket.Dispose
+- uid: Noise.NoiseSocket.IgnoreHandshakeMessageAsync(System.Threading.CancellationToken)
+  name: IgnoreHandshakeMessageAsync(CancellationToken)
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_IgnoreHandshakeMessageAsync_System_Threading_CancellationToken_
+  commentId: M:Noise.NoiseSocket.IgnoreHandshakeMessageAsync(System.Threading.CancellationToken)
+  fullName: Noise.NoiseSocket.IgnoreHandshakeMessageAsync(System.Threading.CancellationToken)
+  nameWithType: NoiseSocket.IgnoreHandshakeMessageAsync(CancellationToken)
+- uid: Noise.NoiseSocket.IgnoreHandshakeMessageAsync*
+  name: IgnoreHandshakeMessageAsync
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_IgnoreHandshakeMessageAsync_
+  commentId: Overload:Noise.NoiseSocket.IgnoreHandshakeMessageAsync
+  isSpec: "True"
+  fullName: Noise.NoiseSocket.IgnoreHandshakeMessageAsync
+  nameWithType: NoiseSocket.IgnoreHandshakeMessageAsync
+- uid: Noise.NoiseSocket.ReadHandshakeMessageAsync(System.Threading.CancellationToken)
+  name: ReadHandshakeMessageAsync(CancellationToken)
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_ReadHandshakeMessageAsync_System_Threading_CancellationToken_
+  commentId: M:Noise.NoiseSocket.ReadHandshakeMessageAsync(System.Threading.CancellationToken)
+  fullName: Noise.NoiseSocket.ReadHandshakeMessageAsync(System.Threading.CancellationToken)
+  nameWithType: NoiseSocket.ReadHandshakeMessageAsync(CancellationToken)
+- uid: Noise.NoiseSocket.ReadHandshakeMessageAsync*
+  name: ReadHandshakeMessageAsync
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_ReadHandshakeMessageAsync_
+  commentId: Overload:Noise.NoiseSocket.ReadHandshakeMessageAsync
+  isSpec: "True"
+  fullName: Noise.NoiseSocket.ReadHandshakeMessageAsync
+  nameWithType: NoiseSocket.ReadHandshakeMessageAsync
+- uid: Noise.NoiseSocket.ReadMessageAsync(System.Threading.CancellationToken)
+  name: ReadMessageAsync(CancellationToken)
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_ReadMessageAsync_System_Threading_CancellationToken_
+  commentId: M:Noise.NoiseSocket.ReadMessageAsync(System.Threading.CancellationToken)
+  fullName: Noise.NoiseSocket.ReadMessageAsync(System.Threading.CancellationToken)
+  nameWithType: NoiseSocket.ReadMessageAsync(CancellationToken)
+- uid: Noise.NoiseSocket.ReadMessageAsync*
+  name: ReadMessageAsync
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_ReadMessageAsync_
+  commentId: Overload:Noise.NoiseSocket.ReadMessageAsync
+  isSpec: "True"
+  fullName: Noise.NoiseSocket.ReadMessageAsync
+  nameWithType: NoiseSocket.ReadMessageAsync
+- uid: Noise.NoiseSocket.ReadNegotiationDataAsync(System.Threading.CancellationToken)
+  name: ReadNegotiationDataAsync(CancellationToken)
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_ReadNegotiationDataAsync_System_Threading_CancellationToken_
+  commentId: M:Noise.NoiseSocket.ReadNegotiationDataAsync(System.Threading.CancellationToken)
+  fullName: Noise.NoiseSocket.ReadNegotiationDataAsync(System.Threading.CancellationToken)
+  nameWithType: NoiseSocket.ReadNegotiationDataAsync(CancellationToken)
+- uid: Noise.NoiseSocket.ReadNegotiationDataAsync*
+  name: ReadNegotiationDataAsync
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_ReadNegotiationDataAsync_
+  commentId: Overload:Noise.NoiseSocket.ReadNegotiationDataAsync
+  isSpec: "True"
+  fullName: Noise.NoiseSocket.ReadNegotiationDataAsync
+  nameWithType: NoiseSocket.ReadNegotiationDataAsync
+- uid: Noise.NoiseSocket.Retry(Noise.Protocol,Noise.ProtocolConfig)
+  name: Retry(Protocol, ProtocolConfig)
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_Retry_Noise_Protocol_Noise_ProtocolConfig_
+  commentId: M:Noise.NoiseSocket.Retry(Noise.Protocol,Noise.ProtocolConfig)
+  fullName: Noise.NoiseSocket.Retry(Noise.Protocol, Noise.ProtocolConfig)
+  nameWithType: NoiseSocket.Retry(Protocol, ProtocolConfig)
+- uid: Noise.NoiseSocket.Retry*
+  name: Retry
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_Retry_
+  commentId: Overload:Noise.NoiseSocket.Retry
+  isSpec: "True"
+  fullName: Noise.NoiseSocket.Retry
+  nameWithType: NoiseSocket.Retry
+- uid: Noise.NoiseSocket.Switch(Noise.Protocol,Noise.ProtocolConfig)
+  name: Switch(Protocol, ProtocolConfig)
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_Switch_Noise_Protocol_Noise_ProtocolConfig_
+  commentId: M:Noise.NoiseSocket.Switch(Noise.Protocol,Noise.ProtocolConfig)
+  fullName: Noise.NoiseSocket.Switch(Noise.Protocol, Noise.ProtocolConfig)
+  nameWithType: NoiseSocket.Switch(Protocol, ProtocolConfig)
+- uid: Noise.NoiseSocket.Switch*
+  name: Switch
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_Switch_
+  commentId: Overload:Noise.NoiseSocket.Switch
+  isSpec: "True"
+  fullName: Noise.NoiseSocket.Switch
+  nameWithType: NoiseSocket.Switch
+- uid: Noise.NoiseSocket.WriteEmptyHandshakeMessageAsync(System.Memory{System.Byte},System.Threading.CancellationToken)
+  name: WriteEmptyHandshakeMessageAsync(Memory<Byte>, CancellationToken)
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_WriteEmptyHandshakeMessageAsync_System_Memory_System_Byte__System_Threading_CancellationToken_
+  commentId: M:Noise.NoiseSocket.WriteEmptyHandshakeMessageAsync(System.Memory{System.Byte},System.Threading.CancellationToken)
+  name.vb: WriteEmptyHandshakeMessageAsync(Memory(Of Byte), CancellationToken)
+  fullName: Noise.NoiseSocket.WriteEmptyHandshakeMessageAsync(System.Memory<System.Byte>, System.Threading.CancellationToken)
+  fullName.vb: Noise.NoiseSocket.WriteEmptyHandshakeMessageAsync(System.Memory(Of System.Byte), System.Threading.CancellationToken)
+  nameWithType: NoiseSocket.WriteEmptyHandshakeMessageAsync(Memory<Byte>, CancellationToken)
+  nameWithType.vb: NoiseSocket.WriteEmptyHandshakeMessageAsync(Memory(Of Byte), CancellationToken)
+- uid: Noise.NoiseSocket.WriteEmptyHandshakeMessageAsync*
+  name: WriteEmptyHandshakeMessageAsync
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_WriteEmptyHandshakeMessageAsync_
+  commentId: Overload:Noise.NoiseSocket.WriteEmptyHandshakeMessageAsync
+  isSpec: "True"
+  fullName: Noise.NoiseSocket.WriteEmptyHandshakeMessageAsync
+  nameWithType: NoiseSocket.WriteEmptyHandshakeMessageAsync
+- uid: Noise.NoiseSocket.WriteHandshakeMessageAsync(System.Memory{System.Byte},System.Memory{System.Byte},System.UInt16,System.Threading.CancellationToken)
+  name: WriteHandshakeMessageAsync(Memory<Byte>, Memory<Byte>, UInt16, CancellationToken)
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_WriteHandshakeMessageAsync_System_Memory_System_Byte__System_Memory_System_Byte__System_UInt16_System_Threading_CancellationToken_
+  commentId: M:Noise.NoiseSocket.WriteHandshakeMessageAsync(System.Memory{System.Byte},System.Memory{System.Byte},System.UInt16,System.Threading.CancellationToken)
+  name.vb: WriteHandshakeMessageAsync(Memory(Of Byte), Memory(Of Byte), UInt16, CancellationToken)
+  fullName: Noise.NoiseSocket.WriteHandshakeMessageAsync(System.Memory<System.Byte>, System.Memory<System.Byte>, System.UInt16, System.Threading.CancellationToken)
+  fullName.vb: Noise.NoiseSocket.WriteHandshakeMessageAsync(System.Memory(Of System.Byte), System.Memory(Of System.Byte), System.UInt16, System.Threading.CancellationToken)
+  nameWithType: NoiseSocket.WriteHandshakeMessageAsync(Memory<Byte>, Memory<Byte>, UInt16, CancellationToken)
+  nameWithType.vb: NoiseSocket.WriteHandshakeMessageAsync(Memory(Of Byte), Memory(Of Byte), UInt16, CancellationToken)
+- uid: Noise.NoiseSocket.WriteHandshakeMessageAsync*
+  name: WriteHandshakeMessageAsync
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_WriteHandshakeMessageAsync_
+  commentId: Overload:Noise.NoiseSocket.WriteHandshakeMessageAsync
+  isSpec: "True"
+  fullName: Noise.NoiseSocket.WriteHandshakeMessageAsync
+  nameWithType: NoiseSocket.WriteHandshakeMessageAsync
+- uid: Noise.NoiseSocket.WriteMessageAsync(System.Memory{System.Byte},System.UInt16,System.Threading.CancellationToken)
+  name: WriteMessageAsync(Memory<Byte>, UInt16, CancellationToken)
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_WriteMessageAsync_System_Memory_System_Byte__System_UInt16_System_Threading_CancellationToken_
+  commentId: M:Noise.NoiseSocket.WriteMessageAsync(System.Memory{System.Byte},System.UInt16,System.Threading.CancellationToken)
+  name.vb: WriteMessageAsync(Memory(Of Byte), UInt16, CancellationToken)
+  fullName: Noise.NoiseSocket.WriteMessageAsync(System.Memory<System.Byte>, System.UInt16, System.Threading.CancellationToken)
+  fullName.vb: Noise.NoiseSocket.WriteMessageAsync(System.Memory(Of System.Byte), System.UInt16, System.Threading.CancellationToken)
+  nameWithType: NoiseSocket.WriteMessageAsync(Memory<Byte>, UInt16, CancellationToken)
+  nameWithType.vb: NoiseSocket.WriteMessageAsync(Memory(Of Byte), UInt16, CancellationToken)
+- uid: Noise.NoiseSocket.WriteMessageAsync*
+  name: WriteMessageAsync
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_WriteMessageAsync_
+  commentId: Overload:Noise.NoiseSocket.WriteMessageAsync
+  isSpec: "True"
+  fullName: Noise.NoiseSocket.WriteMessageAsync
+  nameWithType: NoiseSocket.WriteMessageAsync
