@@ -30,17 +30,15 @@ namespace Noise
 		private readonly bool client;
 		private Protocol protocol;
 		private ProtocolConfig config;
+		private State state;
 		private readonly Stream stream;
 		private readonly bool leaveOpen;
 
 		private HandshakeState handshakeState;
 		private Transport transport;
 
-		private byte[] noiseSocketInit = noiseSocketInit1;
-		private List<SavedMessage> savedMessages = new List<SavedMessage>();
-
+		private List<SavedMessage> savedMessages;
 		private bool isNextMessageEncrypted;
-		private bool allowReinitialization;
 		private bool disposed;
 
 		private NoiseSocket(bool client, Protocol protocol, ProtocolConfig config, Stream stream, bool leaveOpen = false)
@@ -51,8 +49,8 @@ namespace Noise
 			this.stream = stream;
 			this.leaveOpen = leaveOpen;
 
+			savedMessages = new List<SavedMessage>();
 			isNextMessageEncrypted = protocol != null && IsInitialMessageEncrypted(protocol);
-			allowReinitialization = true;
 		}
 
 		/// <summary>
@@ -150,7 +148,7 @@ namespace Noise
 				throw new ArgumentException("Server cannot accept a new protocol as an initiator.");
 			}
 
-			Reinitialize(protocol, config, noiseSocketInit1);
+			Reinitialize(protocol, config, State.Accept);
 		}
 
 		/// <summary>
@@ -196,7 +194,7 @@ namespace Noise
 				throw new ArgumentException("Server cannot switch to a new protocol as a responder.");
 			}
 
-			Reinitialize(protocol, config, noiseSocketInit2);
+			Reinitialize(protocol, config, State.Switch);
 		}
 
 		/// <summary>
@@ -242,24 +240,24 @@ namespace Noise
 				throw new ArgumentException("Server cannot retry with a new protocol as an initiator.");
 			}
 
-			Reinitialize(protocol, config, noiseSocketInit3);
+			Reinitialize(protocol, config, State.Retry);
 		}
 
-		private void Reinitialize(Protocol protocol, ProtocolConfig config, byte[] noiseSocketInit)
+		private void Reinitialize(Protocol protocol, ProtocolConfig config, State state)
 		{
 			if (transport != null)
 			{
 				throw new InvalidOperationException($"Cannot change protocol after the handshake has been completed.");
 			}
 
-			if (!allowReinitialization)
+			if (this.state != State.Initial)
 			{
 				throw new InvalidOperationException($"Cannot change protocol more than once.");
 			}
 
 			this.protocol = protocol;
 			this.config = config;
-			this.noiseSocketInit = noiseSocketInit;
+			this.state = state;
 
 			if (handshakeState != null)
 			{
@@ -268,7 +266,6 @@ namespace Noise
 			}
 
 			isNextMessageEncrypted = IsInitialMessageEncrypted(protocol);
-			allowReinitialization = false;
 		}
 
 		/// <summary>
@@ -649,13 +646,15 @@ namespace Noise
 		{
 			if (savedMessages != null)
 			{
+				var retry = state == State.Retry;
+				var count = savedMessages.Count;
+
 				// Once we are done with all the messages that are part of
 				// the prologue, we no longer have to keep old messages. In
 				// the Accept/Switch cases that's three messages in total,
 				// and in the Retry case there are five messages.
 
-				if ((noiseSocketInit != noiseSocketInit3 && savedMessages.Count == 3)
-					|| (noiseSocketInit == noiseSocketInit3 && savedMessages.Count == 5))
+				if ((!retry && count == 3) || (retry && count == 5))
 				{
 					savedMessages = null;
 				}
@@ -675,6 +674,14 @@ namespace Noise
 			}
 
 			ThrowIfPrologueInvalid();
+
+			byte[] noiseSocketInit = noiseSocketInit1;
+
+			switch (state)
+			{
+				case State.Switch: noiseSocketInit = noiseSocketInit2; break;
+				case State.Retry: noiseSocketInit = noiseSocketInit3; break;
+			}
 
 			var prologue = this.config.Prologue.AsSpan();
 			var length = noiseSocketInit.Length + savedMessages.Sum(message => LenFieldSize + message.Data.Length) + prologue.Length;
@@ -709,19 +716,15 @@ namespace Noise
 
 			int expectedCount = 0;
 
-			if (noiseSocketInit == noiseSocketInit1)
+			if (state == State.Initial || state == State.Accept)
 			{
-				// Accept
-
 				// The initial negotiation_data_len
 				// The initial negotiation_data
 
 				expectedCount = 1;
 			}
-			else if (noiseSocketInit == noiseSocketInit2)
+			else if (state == State.Switch)
 			{
-				// Switch
-
 				// The initial negotiation_data_len
 				// The initial negotiation_data
 				// The initial noise_message_len
@@ -731,10 +734,8 @@ namespace Noise
 
 				expectedCount = 3;
 			}
-			else if (noiseSocketInit == noiseSocketInit3)
+			else if (state == State.Retry)
 			{
-				// Retry
-
 				// The initial negotiation_data_len
 				// The initial negotiation_data
 				// The initial noise_message_len
@@ -883,6 +884,14 @@ namespace Noise
 
 				disposed = true;
 			}
+		}
+
+		private enum State
+		{
+			Initial,
+			Accept,
+			Switch,
+			Retry
 		}
 
 		private enum MessageType
