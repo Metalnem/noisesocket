@@ -21,7 +21,6 @@ namespace Noise
 	{
 		private const int LenFieldSize = 2;
 		private const int TagSize = 16;
-		private const int MaxSavedMessagesCount = 3;
 
 		private static readonly byte[] empty = new byte[0];
 		private static readonly byte[] noiseSocketInit1 = Encoding.UTF8.GetBytes("NoiseSocketInit1");
@@ -650,34 +649,32 @@ namespace Noise
 		{
 			if (savedMessages != null)
 			{
-				// Once we are done with the initial message's negotiation_data,
-				// the initial message's noise_message, and the responding
-				// message's negotiation_data (that's three messages in total),
-				// we no longer have to keep old messages.
+				// Once we are done with all the messages that are part of
+				// the prologue, we no longer have to keep old messages. In
+				// the Accept/Switch cases that's three messages in total,
+				// and in the Retry case there are five messages.
 
-				if (savedMessages.Count == MaxSavedMessagesCount)
+				if ((noiseSocketInit != noiseSocketInit3 && savedMessages.Count == 3)
+					|| (noiseSocketInit == noiseSocketInit3 && savedMessages.Count == 5))
 				{
 					savedMessages = null;
 				}
 				else
 				{
 					savedMessages.Add(new SavedMessage(type, copy ? data.ToArray() : data));
-					ThrowIfPrologueInvalid(false);
 				}
 			}
 		}
 
 		private HandshakeState InitializeHandshakeState()
 		{
-			Debug.Assert(savedMessages != null);
-
 			if (protocol == null)
 			{
 				string error = $"Cannot perform the handshake before calling either {nameof(Accept)}, {nameof(Switch)}, or {nameof(Retry)}.";
 				throw new InvalidOperationException(error);
 			}
 
-			ThrowIfPrologueInvalid(true);
+			ThrowIfPrologueInvalid();
 
 			var prologue = this.config.Prologue.AsSpan();
 			var length = noiseSocketInit.Length + savedMessages.Sum(message => LenFieldSize + message.Data.Length) + prologue.Length;
@@ -703,37 +700,82 @@ namespace Noise
 			);
 		}
 
-		private bool IsPrologueValid(bool strict)
+		private bool IsPrologueValid()
 		{
-			Debug.Assert(savedMessages.Count <= MaxSavedMessagesCount);
-
-			if ((noiseSocketInit == noiseSocketInit1 && savedMessages.Count == 1)
-				|| (strict && savedMessages.Count == MaxSavedMessagesCount)
-				|| (!strict && savedMessages.Count <= MaxSavedMessagesCount))
+			if (savedMessages == null)
 			{
-				var actual = savedMessages.Select(message => message.Type);
-				var expected = LongestValidPrologue(client).Take(savedMessages.Count);
-
-				return expected.SequenceEqual(actual);
+				return false;
 			}
 
-			return false;
+			int expectedCount = 0;
+
+			if (noiseSocketInit == noiseSocketInit1)
+			{
+				// Accept
+
+				// The initial negotiation_data_len
+				// The initial negotiation_data
+
+				expectedCount = 1;
+			}
+			else if (noiseSocketInit == noiseSocketInit2)
+			{
+				// Switch
+
+				// The initial negotiation_data_len
+				// The initial negotiation_data
+				// The initial noise_message_len
+				// The initial noise_message
+				// The responding negotiation_data_len
+				// The responding negotiation_data
+
+				expectedCount = 3;
+			}
+			else if (noiseSocketInit == noiseSocketInit3)
+			{
+				// Retry
+
+				// The initial negotiation_data_len
+				// The initial negotiation_data
+				// The initial noise_message_len
+				// The initial noise_message
+				// The responding negotiation_data_len
+				// The responding negotiation_data
+				// The responding noise_message_len (two bytes of zeros)
+				// The responding noise_message (zero-length, shown for completeness) 
+				// The retry negotiation_data_len
+				// The retry negotiation_data
+
+				expectedCount = 5;
+			}
+
+			var actual = savedMessages.Select(message => message.Type);
+			var expected = LongestValidPrologue(client).Take(expectedCount);
+
+			return expected.SequenceEqual(actual);
 		}
 
 		private static IEnumerable<MessageType> LongestValidPrologue(bool client)
 		{
-			if (client)
-			{
-				yield return MessageType.WriteNegotiationData;
-				yield return MessageType.WriteNoiseMessage;
-				yield return MessageType.ReadNegotiationData;
-			}
-			else
-			{
-				yield return MessageType.ReadNegotiationData;
-				yield return MessageType.ReadNoiseMessage;
-				yield return MessageType.WriteNegotiationData;
-			}
+			return client ? LongestValidPrologueClient() : LongestValidPrologueServer();
+		}
+
+		private static IEnumerable<MessageType> LongestValidPrologueClient()
+		{
+			yield return MessageType.WriteNegotiationData;
+			yield return MessageType.WriteNoiseMessage;
+			yield return MessageType.ReadNegotiationData;
+			yield return MessageType.ReadNoiseMessage;
+			yield return MessageType.WriteNegotiationData;
+		}
+
+		private static IEnumerable<MessageType> LongestValidPrologueServer()
+		{
+			yield return MessageType.ReadNegotiationData;
+			yield return MessageType.ReadNoiseMessage;
+			yield return MessageType.WriteNegotiationData;
+			yield return MessageType.WriteNoiseMessage;
+			yield return MessageType.ReadNegotiationData;
 		}
 
 		private void ThrowIfDisposed()
@@ -744,9 +786,9 @@ namespace Noise
 			}
 		}
 
-		private void ThrowIfPrologueInvalid(bool strict)
+		private void ThrowIfPrologueInvalid()
 		{
-			if (!IsPrologueValid(strict))
+			if (!IsPrologueValid())
 			{
 				throw new InvalidOperationException("Handshake operations have been performed in wrong order.");
 			}
@@ -791,7 +833,11 @@ namespace Noise
 			await stream.ReadAsync(length, 0, length.Length, cancellationToken).ConfigureAwait(false);
 
 			byte[] data = new byte[BinaryPrimitives.ReadUInt16BigEndian(length)];
-			await stream.ReadAsync(data, 0, data.Length, cancellationToken).ConfigureAwait(false);
+
+			if (data.Length > 0)
+			{
+				await stream.ReadAsync(data, 0, data.Length, cancellationToken).ConfigureAwait(false);
+			}
 
 			return data;
 		}
