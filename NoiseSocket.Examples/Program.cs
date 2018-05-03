@@ -1,11 +1,18 @@
-﻿namespace Noise.Examples
+﻿using System.Threading.Tasks;
+
+namespace Noise.Examples
 {
 	public class Program
 	{
 		public static void Main(string[] args)
 		{
-			AcceptExample.Run().GetAwaiter().GetResult();
-			SwitchExample.Run().GetAwaiter().GetResult();
+			Run().GetAwaiter().GetResult();
+		}
+
+		private static async Task Run()
+		{
+			await AcceptExample.Run();
+			await SwitchExample.Run();
 		}
 	}
 }
