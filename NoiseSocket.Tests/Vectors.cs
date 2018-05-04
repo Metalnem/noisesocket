@@ -30,6 +30,9 @@ namespace Noise.Tests
 		private const string RespEphemeralHex = "bbdb4cdbd309f1a1f2e1456967fe288cadd6f712d65dc7b7793d5e63da6b375b";
 		private static readonly byte[] RespEphemeralRaw = Hex.Decode(RespEphemeralHex);
 
+		private const string NegotiationDataHex = "4e6f697365536f636b6574";
+		private static readonly byte[] NegotiationDataRaw = Hex.Decode(NegotiationDataHex);
+
 		private static readonly List<string> payloadsHex = new List<string>
 		{
 			"4c756477696720766f6e204d69736573",
@@ -44,74 +47,63 @@ namespace Noise.Tests
 
 		public static IEnumerable<Vector> Generate()
 		{
-			var flags = BindingFlags.Instance | BindingFlags.NonPublic;
-			var protocolName = typeof(Protocol).GetProperty("Name", flags);
-			var localStaticRequired = typeof(HandshakePattern).GetMethod("LocalStaticRequired", flags);
-			var remoteStaticRequired = typeof(HandshakePattern).GetMethod("RemoteStaticRequired", flags);
-
-			var trueArray = new object[] { true };
-			var falseArray = new object[] { false };
-
 			using (var stream = new MemoryStream())
 			{
-				foreach (var protocol in Protocols)
+				foreach (var protocol in GetProtocols())
 				{
-					bool hasInitStatic = (bool)localStaticRequired.Invoke(protocol.HandshakePattern, trueArray);
-					bool hasInitRemoteStatic = (bool)remoteStaticRequired.Invoke(protocol.HandshakePattern, trueArray);
-
-					bool hasRespStatic = (bool)localStaticRequired.Invoke(protocol.HandshakePattern, falseArray);
-					bool hasRespRemoteStatic = (bool)remoteStaticRequired.Invoke(protocol.HandshakePattern, falseArray);
-
 					var initConfig = new ProtocolConfig(
 						initiator: true,
 						prologue: PrologueRaw,
-						s: hasInitStatic ? InitStaticRaw : null,
-						rs: hasInitRemoteStatic ? RespStaticPublicRaw : null
+						s: protocol.InitStaticRequired ? InitStaticRaw : null,
+						rs: protocol.InitRemoteStaticRequired ? RespStaticPublicRaw : null
 					);
 
 					var respConfig = new ProtocolConfig(
 						initiator: false,
 						prologue: PrologueRaw,
-						s: hasRespStatic ? RespStaticRaw : null,
-						rs: hasRespRemoteStatic ? InitStaticPublicRaw : null
+						s: protocol.RespStaticRequired ? RespStaticRaw : null,
+						rs: protocol.RespRemoteStaticRequired ? InitStaticPublicRaw : null
 					);
 
-					var initSocket = NoiseSocket.CreateClient(protocol, initConfig, stream, true);
+					var initSocket = NoiseSocket.CreateClient(protocol.Protocol, initConfig, stream, true);
 					var respSocket = NoiseSocket.CreateServer(stream, true);
 
 					var messages = new List<Message>();
-					var name = (byte[])protocolName.GetValue(protocol);
+					var hasData = true;
 
 					for (int i = 0; i < payloadsHex.Count; ++i)
 					{
 						stream.Position = 0;
 
-						var hex = payloadsHex[i];
-						var raw = payloadsRaw[i];
-
 						if (initSocket.HandshakeHash.IsEmpty)
 						{
-							byte[] negotiationData = i == 0 ? name : null;
-							initSocket.WriteHandshakeMessageAsync(negotiationData, raw).GetAwaiter().GetResult();
-							messages.Add(new Message { Payload = hex, Ciphertext = ReadMessage(stream) });
+							var negotiationData = hasData ? NegotiationDataRaw : null;
+							initSocket.WriteHandshakeMessageAsync(negotiationData, payloadsRaw[i]).GetAwaiter().GetResult();
+
+							var message = new Message
+							{
+								NegotiationData = hasData ? NegotiationDataHex : null,
+								Payload = payloadsHex[i],
+								Ciphertext = ReadMessage(stream)
+							};
+
+							messages.Add(message);
+							hasData = false;
 
 							stream.Position = 0;
 							respSocket.ReadNegotiationDataAsync().GetAwaiter().GetResult();
 
 							if (i == 0)
 							{
-								respSocket.Accept(protocol, respConfig);
+								respSocket.Accept(protocol.Protocol, respConfig);
 							}
 
 							respSocket.ReadHandshakeMessageAsync().GetAwaiter().GetResult();
 						}
 						else
 						{
-							initSocket.WriteMessageAsync(raw).GetAwaiter().GetResult();
-							messages.Add(new Message { Payload = hex, Ciphertext = ReadMessage(stream) });
-
-							stream.Position = 0;
-							respSocket.ReadMessageAsync().GetAwaiter().GetResult();
+							initSocket.WriteMessageAsync(payloadsRaw[i]).GetAwaiter().GetResult();
+							messages.Add(new Message { Payload = payloadsHex[i], Ciphertext = ReadMessage(stream) });
 						}
 
 						var temp = initSocket;
@@ -121,15 +113,15 @@ namespace Noise.Tests
 
 					var vector = new Vector
 					{
-						ProtocolName = Encoding.ASCII.GetString(name),
+						ProtocolName = protocol.NameString,
 						InitPrologue = PrologueHex,
-						InitStatic = hasInitStatic ? InitStaticHex : null,
+						InitStatic = protocol.InitStaticRequired ? InitStaticHex : null,
 						InitEphemeral = InitEphemeralHex,
-						InitRemoteStatic = hasInitRemoteStatic ? RespStaticPublicHex : null,
+						InitRemoteStatic = protocol.InitRemoteStaticRequired ? RespStaticPublicHex : null,
 						RespPrologue = PrologueHex,
-						RespStatic = hasRespStatic ? RespStaticHex : null,
+						RespStatic = protocol.RespStaticRequired ? RespStaticHex : null,
 						RespEphemeral = RespEphemeralHex,
-						RespRemoteStatic = hasRespRemoteStatic ? InitStaticPublicHex : null,
+						RespRemoteStatic = protocol.RespRemoteStaticRequired ? InitStaticPublicHex : null,
 						HandshakeHash = Hex.Encode(initSocket.HandshakeHash.ToArray()),
 						Messages = messages
 					};
@@ -181,14 +173,44 @@ namespace Noise.Tests
 			}
 		}
 
-		private static IEnumerable<Protocol> Protocols
+		private static IEnumerable<ProtocolDetails> GetProtocols()
 		{
-			get
+			var flags = BindingFlags.Instance | BindingFlags.NonPublic;
+			var localStaticRequiredMethod = typeof(HandshakePattern).GetMethod("LocalStaticRequired", flags);
+			var remoteStaticRequiredMethod = typeof(HandshakePattern).GetMethod("RemoteStaticRequired", flags);
+			var nameProperty = typeof(Protocol).GetProperty("Name", flags);
+
+			var trueArray = new object[] { true };
+			var falseArray = new object[] { false };
+
+			foreach (var pattern in Patterns)
 			{
-				return from pattern in Patterns
-					   from cipher in Ciphers
-					   from hash in Hashes
-					   select new Protocol(pattern, cipher, hash);
+				bool initStaticRequired = (bool)localStaticRequiredMethod.Invoke(pattern, trueArray);
+				bool initRemoteStaticRequired = (bool)remoteStaticRequiredMethod.Invoke(pattern, trueArray);
+
+				bool respStaticRequired = (bool)localStaticRequiredMethod.Invoke(pattern, falseArray);
+				bool respRemoteStaticRequired = (bool)remoteStaticRequiredMethod.Invoke(pattern, falseArray);
+
+				foreach (var cipher in Ciphers)
+				{
+					foreach (var hash in Hashes)
+					{
+						var protocol = new Protocol(pattern, cipher, hash);
+						var nameBytes = (byte[])nameProperty.GetValue(protocol);
+						var nameString = Encoding.ASCII.GetString(nameBytes);
+
+						yield return new ProtocolDetails
+						{
+							Protocol = protocol,
+							NameBytes = nameBytes,
+							NameString = nameString,
+							InitStaticRequired = initStaticRequired,
+							InitRemoteStaticRequired = initRemoteStaticRequired,
+							RespStaticRequired = respStaticRequired,
+							RespRemoteStaticRequired = respRemoteStaticRequired
+						};
+					}
+				}
 			}
 		}
 
