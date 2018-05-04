@@ -36,6 +36,7 @@ namespace Noise
 
 		private HandshakeState handshakeState;
 		private Transport transport;
+		private byte[] handshakeHash;
 
 		private List<SavedMessage> savedMessages;
 		private bool isNextMessageEncrypted;
@@ -51,6 +52,23 @@ namespace Noise
 
 			savedMessages = new List<SavedMessage>();
 			isNextMessageEncrypted = protocol != null && IsInitialMessageEncrypted(protocol);
+		}
+
+		/// <summary>
+		/// A value that hashes all the handshake data that's been sent
+		/// and received. It uniquely identifies the Noise session.
+		/// It's available only after the handshake has been completed.
+		/// </summary>
+		/// <exception cref="ObjectDisposedException">
+		/// Thrown if the current instance has already been disposed.
+		/// </exception>
+		public ReadOnlySpan<byte> HandshakeHash
+		{
+			get
+			{
+				ThrowIfDisposed();
+				return handshakeHash;
+			}
 		}
 
 		/// <summary>
@@ -346,7 +364,7 @@ namespace Noise
 				}
 
 				var ciphertext = buffer.AsMemory(negotiationLength + LenFieldSize);
-				var (written, hash, transport) = handshakeState.WriteMessage(plaintext.Span, ciphertext.Span);
+				var (bytesWritten, handshakeHash, transport) = handshakeState.WriteMessage(plaintext.Span, ciphertext.Span);
 				isNextMessageEncrypted = true;
 
 				if (transport != null)
@@ -354,14 +372,15 @@ namespace Noise
 					handshakeState.Dispose();
 					handshakeState = null;
 
+					this.handshakeHash = handshakeHash;
 					this.transport = transport;
 				}
 
 				WritePacket(negotiationData.Span, buffer);
-				BinaryPrimitives.WriteUInt16BigEndian(buffer.AsSpan(negotiationLength), (ushort)written);
-				SaveMessage(MessageType.WriteNoiseMessage, ciphertext.Slice(0, written));
+				BinaryPrimitives.WriteUInt16BigEndian(buffer.AsSpan(negotiationLength), (ushort)bytesWritten);
+				SaveMessage(MessageType.WriteNoiseMessage, ciphertext.Slice(0, bytesWritten));
 
-				int noiseLength = LenFieldSize + written;
+				int noiseLength = LenFieldSize + bytesWritten;
 				int handshakeLength = negotiationLength + noiseLength;
 
 				await stream.WriteAsync(buffer, 0, handshakeLength, cancellationToken).ConfigureAwait(false);
@@ -492,23 +511,24 @@ namespace Noise
 			}
 
 			var plaintext = new byte[noiseMessage.Length];
-			var (read, hash, transport) = handshakeState.ReadMessage(noiseMessage, plaintext);
+			var (bytesRead, handshakeHash, transport) = handshakeState.ReadMessage(noiseMessage, plaintext);
 
 			if (transport != null)
 			{
 				handshakeState.Dispose();
 				handshakeState = null;
 
+				this.handshakeHash = handshakeHash;
 				this.transport = transport;
 			}
 
 			if (isNextMessageEncrypted)
 			{
-				return ReadPacket(plaintext.AsSpan(0, read));
+				return ReadPacket(plaintext.AsSpan(0, bytesRead));
 			}
 
 			isNextMessageEncrypted = true;
-			return plaintext.AsSpan(0, read).ToArray();
+			return plaintext.AsSpan(0, bytesRead).ToArray();
 		}
 
 		/// <summary>
