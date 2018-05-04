@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -70,33 +71,47 @@ namespace Noise.Tests
 
 					foreach (var payload in payloads)
 					{
-						if (!initSocket.HandshakeHash.IsEmpty)
+						if (initSocket.HandshakeHash.IsEmpty)
 						{
-							break;
+							stream.Position = 0;
+							initSocket.WriteHandshakeMessageAsync(name, Hex.Decode(payload)).GetAwaiter().GetResult();
+							negotiationData = null;
+
+							var message = new Message
+							{
+								Payload = payload,
+								Ciphertext = ReadMessage(stream)
+							};
+
+							messages.Add(message);
+
+							stream.Position = 0;
+							respSocket.ReadNegotiationDataAsync().GetAwaiter().GetResult();
+
+							if (!accepted)
+							{
+								respSocket.Accept(protocol, respConfig);
+								accepted = true;
+							}
+
+							respSocket.ReadHandshakeMessageAsync().GetAwaiter().GetResult();
 						}
-
-						stream.Position = 0;
-						initSocket.WriteHandshakeMessageAsync(name, Hex.Decode(payload)).GetAwaiter().GetResult();
-						negotiationData = null;
-
-						var message = new Message
+						else
 						{
-							Payload = payload,
-							Ciphertext = Hex.Encode(stream.ToArray())
-						};
+							stream.Position = 0;
+							initSocket.WriteMessageAsync(Hex.Decode(payload)).GetAwaiter().GetResult();
 
-						messages.Add(message);
+							stream.Position = 0;
+							respSocket.ReadMessageAsync().GetAwaiter().GetResult();
 
-						stream.Position = 0;
-						respSocket.ReadNegotiationDataAsync().GetAwaiter().GetResult();
+							var message = new Message
+							{
+								Payload = payload,
+								Ciphertext = ReadMessage(stream)
+							};
 
-						if (!accepted)
-						{
-							respSocket.Accept(protocol, respConfig);
-							accepted = true;
+							messages.Add(message);
 						}
-
-						respSocket.ReadHandshakeMessageAsync().GetAwaiter().GetResult();
 
 						var temp = initSocket;
 						initSocket = respSocket;
@@ -174,6 +189,14 @@ namespace Noise.Tests
 					   from hash in Hashes
 					   select new Protocol(pattern, cipher, hash);
 			}
+		}
+
+		private static string ReadMessage(MemoryStream stream)
+		{
+			byte[] message = new byte[stream.Position];
+			Array.Copy(stream.GetBuffer(), 0, message, 0, message.Length);
+
+			return Hex.Encode(message);
 		}
 	}
 }
