@@ -65,11 +65,19 @@ namespace Noise.Tests
 
 					var messages = new List<Message>();
 					var name = (byte[])protocolName.GetValue(protocol);
+					var negotiationData = name;
+					var accepted = false;
 
 					foreach (var payload in payloads)
 					{
+						if (!initSocket.HandshakeHash.IsEmpty)
+						{
+							break;
+						}
+
 						stream.Position = 0;
 						initSocket.WriteHandshakeMessageAsync(name, Hex.Decode(payload)).GetAwaiter().GetResult();
+						negotiationData = null;
 
 						var message = new Message
 						{
@@ -78,7 +86,21 @@ namespace Noise.Tests
 						};
 
 						messages.Add(message);
-						break;
+
+						stream.Position = 0;
+						respSocket.ReadNegotiationDataAsync().GetAwaiter().GetResult();
+
+						if (!accepted)
+						{
+							respSocket.Accept(protocol, respConfig);
+							accepted = true;
+						}
+
+						respSocket.ReadHandshakeMessageAsync().GetAwaiter().GetResult();
+
+						var temp = initSocket;
+						initSocket = respSocket;
+						respSocket = temp;
 					}
 
 					var vector = new Vector
@@ -92,8 +114,12 @@ namespace Noise.Tests
 						RespStatic = hasRespStatic ? RespStatic : null,
 						RespEphemeral = RespEphemeral,
 						RespRemoteStatic = hasRespRemoteStatic ? InitStaticPublic : null,
+						HandshakeHash = Hex.Encode(initSocket.HandshakeHash.ToArray()),
 						Messages = messages
 					};
+
+					initSocket.Dispose();
+					respSocket.Dispose();
 
 					yield return vector;
 				}
