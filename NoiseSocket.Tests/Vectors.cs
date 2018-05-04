@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace Noise.Tests
 {
@@ -14,6 +16,16 @@ namespace Noise.Tests
 		private const string RespStaticPublic = "31e0303fd6418d2f8c0e78b91f22e8caed0fbe48656dcf4767e4834f701b8f62";
 		private const string RespEphemeral = "bbdb4cdbd309f1a1f2e1456967fe288cadd6f712d65dc7b7793d5e63da6b375b";
 
+		private static readonly List<string> payloads = new List<string>
+		{
+			"4c756477696720766f6e204d69736573",
+			"4d757272617920526f746862617264",
+			"462e20412e20486179656b",
+			"4361726c204d656e676572",
+			"4a65616e2d426170746973746520536179",
+			"457567656e2042f6686d20766f6e2042617765726b"
+		};
+
 		public static IEnumerable<Vector> Generate()
 		{
 			var flags = BindingFlags.Instance | BindingFlags.NonPublic;
@@ -24,28 +36,67 @@ namespace Noise.Tests
 			var trueArray = new object[] { true };
 			var falseArray = new object[] { false };
 
-			foreach (var protocol in Protocols)
+			using (var stream = new MemoryStream())
 			{
-				bool hasInitStatic = (bool)localStaticRequired.Invoke(protocol.HandshakePattern, trueArray);
-				bool hasInitRemoteStatic = (bool)remoteStaticRequired.Invoke(protocol.HandshakePattern, trueArray);
-
-				bool hasRespStatic = (bool)localStaticRequired.Invoke(protocol.HandshakePattern, falseArray);
-				bool hasRespRemoteStatic = (bool)remoteStaticRequired.Invoke(protocol.HandshakePattern, falseArray);
-
-				var vector = new Vector
+				foreach (var protocol in Protocols)
 				{
-					ProtocolName = Hex.Encode((byte[])protocolName.GetValue(protocol)),
-					InitPrologue = Prologue,
-					InitStatic = hasInitStatic ? InitStatic : null,
-					InitEphemeral = InitEphemeral,
-					InitRemoteStatic = hasInitRemoteStatic ? RespStaticPublic : null,
-					RespPrologue = Prologue,
-					RespStatic = hasRespStatic ? RespStatic : null,
-					RespEphemeral = RespEphemeral,
-					RespRemoteStatic = hasRespRemoteStatic ? InitStaticPublic : null
-				};
+					bool hasInitStatic = (bool)localStaticRequired.Invoke(protocol.HandshakePattern, trueArray);
+					bool hasInitRemoteStatic = (bool)remoteStaticRequired.Invoke(protocol.HandshakePattern, trueArray);
 
-				yield return vector;
+					bool hasRespStatic = (bool)localStaticRequired.Invoke(protocol.HandshakePattern, falseArray);
+					bool hasRespRemoteStatic = (bool)remoteStaticRequired.Invoke(protocol.HandshakePattern, falseArray);
+
+					var initConfig = new ProtocolConfig(
+						initiator: true,
+						prologue: Hex.Decode(Prologue),
+						s: hasInitStatic ? Hex.Decode(InitStatic) : null,
+						rs: hasInitRemoteStatic ? Hex.Decode(RespStaticPublic) : null
+					);
+
+					var respConfig = new ProtocolConfig(
+						initiator: false,
+						prologue: Hex.Decode(Prologue),
+						s: hasRespStatic ? Hex.Decode(RespStatic) : null,
+						rs: hasRespRemoteStatic ? Hex.Decode(InitStaticPublic) : null
+					);
+
+					var initSocket = NoiseSocket.CreateClient(protocol, initConfig, stream, true);
+					var respSocket = NoiseSocket.CreateServer(stream, true);
+
+					var messages = new List<Message>();
+					var name = (byte[])protocolName.GetValue(protocol);
+
+					foreach (var payload in payloads)
+					{
+						stream.Position = 0;
+						initSocket.WriteHandshakeMessageAsync(name, Hex.Decode(payload)).GetAwaiter().GetResult();
+
+						var message = new Message
+						{
+							Payload = payload,
+							Ciphertext = Hex.Encode(stream.ToArray())
+						};
+
+						messages.Add(message);
+						break;
+					}
+
+					var vector = new Vector
+					{
+						ProtocolName = Encoding.ASCII.GetString(name),
+						InitPrologue = Prologue,
+						InitStatic = hasInitStatic ? InitStatic : null,
+						InitEphemeral = InitEphemeral,
+						InitRemoteStatic = hasInitRemoteStatic ? RespStaticPublic : null,
+						RespPrologue = Prologue,
+						RespStatic = hasRespStatic ? RespStatic : null,
+						RespEphemeral = RespEphemeral,
+						RespRemoteStatic = hasRespRemoteStatic ? InitStaticPublic : null,
+						Messages = messages
+					};
+
+					yield return vector;
+				}
 			}
 		}
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Noise.Tests
@@ -33,5 +34,8 @@ namespace Noise.Tests
 
 		[JsonProperty("handshake_hash")]
 		public string HandshakeHash;
+
+		[JsonProperty("messages")]
+		public List<Message> Messages;
 	}
 }
