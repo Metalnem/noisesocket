@@ -65,6 +65,19 @@ references:
   isSpec: "True"
   fullName: Noise.NoiseSocket.Dispose
   nameWithType: NoiseSocket.Dispose
+- uid: Noise.NoiseSocket.HandshakeHash
+  name: HandshakeHash
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_HandshakeHash
+  commentId: P:Noise.NoiseSocket.HandshakeHash
+  fullName: Noise.NoiseSocket.HandshakeHash
+  nameWithType: NoiseSocket.HandshakeHash
+- uid: Noise.NoiseSocket.HandshakeHash*
+  name: HandshakeHash
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_HandshakeHash_
+  commentId: Overload:Noise.NoiseSocket.HandshakeHash
+  isSpec: "True"
+  fullName: Noise.NoiseSocket.HandshakeHash
+  nameWithType: NoiseSocket.HandshakeHash
 - uid: Noise.NoiseSocket.IgnoreHandshakeMessageAsync(System.Threading.CancellationToken)
   name: IgnoreHandshakeMessageAsync(CancellationToken)
   href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_IgnoreHandshakeMessageAsync_System_Threading_CancellationToken_
