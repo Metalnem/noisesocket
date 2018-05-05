@@ -209,6 +209,7 @@ namespace Noise.Tests
 					foreach (var hash in Hashes)
 					{
 						var protocol = new Protocol(pattern, cipher, hash);
+						var name = Encoding.ASCII.GetString(protocol.Name);
 
 						foreach (var paddedLength in PaddedLengths)
 						{
@@ -216,7 +217,7 @@ namespace Noise.Tests
 							{
 								Protocol = protocol,
 								NameBytes = protocol.Name,
-								NameString = Encoding.ASCII.GetString(protocol.Name),
+								NameString = name,
 								InitStaticRequired = initStaticRequired,
 								InitRemoteStaticRequired = initRemoteStaticRequired,
 								RespStaticRequired = respStaticRequired,
