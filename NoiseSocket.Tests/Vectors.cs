@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace Noise.Tests
@@ -66,6 +67,9 @@ namespace Noise.Tests
 
 					var initSocket = NoiseSocket.CreateClient(protocol.Protocol, initConfig, stream, true);
 					var respSocket = NoiseSocket.CreateServer(stream, true);
+
+					initSocket.SetInitializer(handshakeState => SetDh(handshakeState, InitEphemeralRaw));
+					respSocket.SetInitializer(handshakeState => SetDh(handshakeState, RespEphemeralRaw));
 
 					var messages = new List<Message>();
 					var hasData = true;
@@ -201,6 +205,14 @@ namespace Noise.Tests
 					}
 				}
 			}
+		}
+
+		private static void SetDh(HandshakeState state, byte[] ephemeral)
+		{
+			var flags = BindingFlags.Instance | BindingFlags.NonPublic;
+			var setDh = state.GetType().GetMethod("SetDh", flags);
+
+			setDh.Invoke(state, new object[] { new FixedKeyDh(ephemeral) });
 		}
 
 		private static string ReadMessage(MemoryStream stream)

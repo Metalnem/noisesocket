@@ -35,6 +35,7 @@ namespace Noise
 		private readonly bool leaveOpen;
 
 		private HandshakeState handshakeState;
+		private Action<HandshakeState> initializer;
 		private Transport transport;
 		private byte[] handshakeHash;
 
@@ -662,6 +663,16 @@ namespace Noise
 			return ReadPacket(noiseMessage.AsSpan(0, read));
 		}
 
+		/// <summary>
+		/// Sets the function to be called after the handshake state
+		/// is created. It should only be used from NoiseSocket.Tests
+		/// to fix the ephemeral private key.
+		/// </summary>
+		internal void SetInitializer(Action<HandshakeState> initializer)
+		{
+			this.initializer = initializer;
+		}
+
 		private void SaveMessage(MessageType type, Memory<byte> data, bool copy = true)
 		{
 			if (savedMessages != null)
@@ -718,13 +729,20 @@ namespace Noise
 
 			prologue.CopyTo(next);
 
-			return protocol.Create(
+			var handshakeState = protocol.Create(
 				config.Initiator,
 				buffer,
 				config.LocalStatic,
 				config.RemoteStatic,
 				config.PreSharedKeys
 			);
+
+			if (initializer != null)
+			{
+				initializer(handshakeState);
+			}
+
+			return handshakeState;
 		}
 
 		private bool IsPrologueValid()
