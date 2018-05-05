@@ -25,7 +25,7 @@
 ## Samples
 
 [Acceptance] (using [TcpClient] and [TcpListener])  
-[Switch protocol] (using ordinary [Socket])
+[Switch protocol] (using ordinary [Socket])  
 [Retry request] (using [NamedPipeClientStream] and [NamedPipeServerStream])
 
 [Acceptance]: https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket.Examples/AcceptExample.cs
