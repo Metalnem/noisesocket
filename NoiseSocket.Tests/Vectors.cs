@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 
 namespace Noise.Tests
@@ -33,7 +31,7 @@ namespace Noise.Tests
 		private const string NegotiationDataHex = "4e6f697365536f636b6574";
 		private static readonly byte[] NegotiationDataRaw = Hex.Decode(NegotiationDataHex);
 
-		private static readonly List<string> payloadsHex = new List<string>
+		private static readonly List<string> messagesHex = new List<string>
 		{
 			"4c756477696720766f6e204d69736573",
 			"4d757272617920526f746862617264",
@@ -43,7 +41,7 @@ namespace Noise.Tests
 			"457567656e2042f6686d20766f6e2042617765726b"
 		};
 
-		private static readonly List<byte[]> payloadsRaw = payloadsHex.Select(Hex.Decode).ToList();
+		private static readonly List<byte[]> messagesRaw = messagesHex.Select(Hex.Decode).ToList();
 
 		public static IEnumerable<Vector> Generate()
 		{
@@ -68,26 +66,26 @@ namespace Noise.Tests
 					var initSocket = NoiseSocket.CreateClient(protocol.Protocol, initConfig, stream, true);
 					var respSocket = NoiseSocket.CreateServer(stream, true);
 
-					initSocket.SetInitializer(handshakeState => SetDh(handshakeState, InitEphemeralRaw));
-					respSocket.SetInitializer(handshakeState => SetDh(handshakeState, RespEphemeralRaw));
+					initSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, InitEphemeralRaw.ToArray()));
+					respSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, RespEphemeralRaw.ToArray()));
 
 					var messages = new List<Message>();
 					var hasData = true;
 
-					for (int i = 0; i < payloadsHex.Count; ++i)
+					for (int i = 0; i < messagesHex.Count; ++i)
 					{
 						stream.Position = 0;
 
 						if (initSocket.HandshakeHash.IsEmpty)
 						{
 							var negotiationData = hasData ? NegotiationDataRaw : null;
-							initSocket.WriteHandshakeMessageAsync(negotiationData, payloadsRaw[i]).GetAwaiter().GetResult();
+							initSocket.WriteHandshakeMessageAsync(negotiationData, messagesRaw[i]).GetAwaiter().GetResult();
 
 							var message = new Message
 							{
 								NegotiationData = hasData ? NegotiationDataHex : null,
-								Payload = payloadsHex[i],
-								Ciphertext = ReadMessage(stream)
+								MessageBody = messagesHex[i],
+								Value = Utilities.ReadMessageHex(stream)
 							};
 
 							messages.Add(message);
@@ -105,8 +103,8 @@ namespace Noise.Tests
 						}
 						else
 						{
-							initSocket.WriteMessageAsync(payloadsRaw[i]).GetAwaiter().GetResult();
-							messages.Add(new Message { Payload = payloadsHex[i], Ciphertext = ReadMessage(stream) });
+							initSocket.WriteMessageAsync(messagesRaw[i]).GetAwaiter().GetResult();
+							messages.Add(new Message { MessageBody = messagesHex[i], Value = Utilities.ReadMessageHex(stream) });
 						}
 
 						var temp = initSocket;
@@ -205,22 +203,6 @@ namespace Noise.Tests
 					}
 				}
 			}
-		}
-
-		private static void SetDh(HandshakeState state, byte[] ephemeral)
-		{
-			var flags = BindingFlags.Instance | BindingFlags.NonPublic;
-			var setDh = state.GetType().GetMethod("SetDh", flags);
-
-			setDh.Invoke(state, new object[] { new FixedKeyDh(ephemeral) });
-		}
-
-		private static string ReadMessage(MemoryStream stream)
-		{
-			byte[] message = new byte[stream.Position];
-			Array.Copy(stream.GetBuffer(), 0, message, 0, message.Length);
-
-			return Hex.Encode(message);
 		}
 	}
 }

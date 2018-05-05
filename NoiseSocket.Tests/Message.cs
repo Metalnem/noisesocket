@@ -7,10 +7,10 @@ namespace Noise.Tests
 		[JsonProperty("negotiation_data")]
 		public string NegotiationData;
 
-		[JsonProperty("payload")]
-		public string Payload;
+		[JsonProperty("message_body")]
+		public string MessageBody;
 
-		[JsonProperty("ciphertext")]
-		public string Ciphertext;
+		[JsonProperty("message")]
+		public string Value;
 	}
 }
