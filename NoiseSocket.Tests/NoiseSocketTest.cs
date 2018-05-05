@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
@@ -9,7 +10,7 @@ namespace Noise.Tests
 	public class NoiseSocketTest
 	{
 		[Fact]
-		public void TestVectors()
+		public async Task TestVectors()
 		{
 			var s = File.ReadAllText("Vectors/noisesocket.json");
 			var json = JObject.Parse(s);
@@ -54,12 +55,12 @@ namespace Noise.Tests
 
 						if (initSocket.HandshakeHash.IsEmpty)
 						{
-							initSocket.WriteHandshakeMessageAsync(negotiationData, messageBody, paddedLength).GetAwaiter().GetResult();
+							await initSocket.WriteHandshakeMessageAsync(negotiationData, messageBody, paddedLength);
 							var initMessage = Utilities.ReadMessageRaw(stream);
 							Assert.Equal(value, initMessage);
 
 							stream.Position = 0;
-							var respNegotiationData = respSocket.ReadNegotiationDataAsync().GetAwaiter().GetResult();
+							var respNegotiationData = await respSocket.ReadNegotiationDataAsync();
 							Assert.Equal(negotiationData, respNegotiationData);
 
 							if (index == 0)
@@ -67,23 +68,23 @@ namespace Noise.Tests
 								respSocket.Accept(protocol, respConfig);
 							}
 
-							var respMessageBody = respSocket.ReadHandshakeMessageAsync().GetAwaiter().GetResult();
+							var respMessageBody = await respSocket.ReadHandshakeMessageAsync();
 							Assert.Equal(messageBody, respMessageBody);
 						}
 						else if (isOneWay && index == 1)
 						{
-							respSocket.WriteEmptyHandshakeMessageAsync().GetAwaiter().GetResult();
+							await respSocket.WriteEmptyHandshakeMessageAsync();
 							var respMessage = Utilities.ReadMessageRaw(stream);
 							Assert.Equal(value, respMessage);
 						}
 						else
 						{
-							initSocket.WriteMessageAsync(messageBody, paddedLength).GetAwaiter().GetResult();
+							await initSocket.WriteMessageAsync(messageBody, paddedLength);
 							var initMessage = Utilities.ReadMessageRaw(stream);
 							Assert.Equal(value, initMessage);
 
 							stream.Position = 0;
-							var respMessageBody = respSocket.ReadMessageAsync().GetAwaiter().GetResult();
+							var respMessageBody = await respSocket.ReadMessageAsync();
 							Assert.Equal(messageBody, respMessageBody);
 						}
 

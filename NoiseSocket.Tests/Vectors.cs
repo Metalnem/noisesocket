@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Noise.Tests
 {
@@ -43,8 +44,10 @@ namespace Noise.Tests
 
 		private static readonly List<byte[]> messagesRaw = messagesHex.Select(Hex.Decode).ToList();
 
-		public static IEnumerable<Vector> Generate()
+		public static async Task<IEnumerable<Vector>> Generate()
 		{
+			var vectors = new List<Vector>();
+
 			using (var stream = new MemoryStream())
 			{
 				foreach (var config in GetTestConfigs())
@@ -83,7 +86,7 @@ namespace Noise.Tests
 						{
 							var negotiationData = hasData ? NegotiationDataRaw : null;
 							var isNextMessageEncrypted = initSocket.IsNextMessageEncrypted;
-							initSocket.WriteHandshakeMessageAsync(negotiationData, messagesRaw[i], paddedLength).GetAwaiter().GetResult();
+							await initSocket.WriteHandshakeMessageAsync(negotiationData, messagesRaw[i], paddedLength);
 
 							var message = new Message
 							{
@@ -97,25 +100,25 @@ namespace Noise.Tests
 							hasData = false;
 
 							stream.Position = 0;
-							respSocket.ReadNegotiationDataAsync().GetAwaiter().GetResult();
+							await respSocket.ReadNegotiationDataAsync();
 
 							if (i == 0)
 							{
 								respSocket.Accept(config.Protocol, respConfig);
 							}
 
-							respSocket.ReadHandshakeMessageAsync().GetAwaiter().GetResult();
+							await respSocket.ReadHandshakeMessageAsync();
 
 							if (isOneWay)
 							{
 								stream.Position = 0;
-								respSocket.WriteEmptyHandshakeMessageAsync().GetAwaiter().GetResult();
+								await respSocket.WriteEmptyHandshakeMessageAsync();
 								messages.Add(new Message { Value = Utilities.ReadMessageHex(stream) });
 							}
 						}
 						else
 						{
-							initSocket.WriteMessageAsync(messagesRaw[i], paddedLength).GetAwaiter().GetResult();
+							await initSocket.WriteMessageAsync(messagesRaw[i], paddedLength);
 
 							var message = new Message
 							{
@@ -153,9 +156,11 @@ namespace Noise.Tests
 					initSocket.Dispose();
 					respSocket.Dispose();
 
-					yield return vector;
+					vectors.Add(vector);
 				}
 			}
+
+			return vectors;
 		}
 
 		private static IEnumerable<HandshakePattern> Patterns

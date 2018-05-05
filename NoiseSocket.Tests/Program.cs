@@ -19,7 +19,7 @@ namespace Noise.Tests
 
 				var vectors = new Dictionary<string, object>
 				{
-					["vectors"] = Vectors.Generate()
+					["vectors"] = Vectors.Generate().GetAwaiter().GetResult()
 				};
 
 				serializer.Serialize(json, vectors);
