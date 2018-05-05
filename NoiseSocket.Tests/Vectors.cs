@@ -70,8 +70,10 @@ namespace Noise.Tests
 					respSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, RespEphemeralRaw.ToArray()));
 
 					var messages = new List<Message>();
-					var hasData = true;
 					var paddedLength = (ushort)config.PaddedLength;
+
+					bool hasData = true;
+					bool isOneWay = config.Protocol.HandshakePattern.Patterns.Count() == 1;
 
 					for (int i = 0; i < messagesHex.Count; ++i)
 					{
@@ -103,6 +105,13 @@ namespace Noise.Tests
 							}
 
 							respSocket.ReadHandshakeMessageAsync().GetAwaiter().GetResult();
+
+							if (isOneWay)
+							{
+								stream.Position = 0;
+								respSocket.WriteEmptyHandshakeMessageAsync().GetAwaiter().GetResult();
+								messages.Add(new Message { Value = Utilities.ReadMessageHex(stream) });
+							}
 						}
 						else
 						{
@@ -118,9 +127,12 @@ namespace Noise.Tests
 							messages.Add(message);
 						}
 
-						var temp = initSocket;
-						initSocket = respSocket;
-						respSocket = temp;
+						if (!isOneWay)
+						{
+							var temp = initSocket;
+							initSocket = respSocket;
+							respSocket = temp;
+						}
 					}
 
 					var vector = new Vector
@@ -150,6 +162,9 @@ namespace Noise.Tests
 		{
 			get
 			{
+				yield return HandshakePattern.N;
+				yield return HandshakePattern.K;
+				yield return HandshakePattern.X;
 				yield return HandshakePattern.NN;
 				yield return HandshakePattern.NK;
 				yield return HandshakePattern.NX;

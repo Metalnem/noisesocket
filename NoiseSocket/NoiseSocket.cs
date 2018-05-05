@@ -419,7 +419,7 @@ namespace Noise
 		/// </exception>
 		/// <exception cref="IOException">Thrown if an I/O error occurs.</exception>
 		/// <exception cref="NotSupportedException">Thrown if the stream does not support reading.</exception>
-		public async Task WriteEmptyHandshakeMessageAsync(Memory<byte> negotiationData, CancellationToken cancellationToken = default)
+		public async Task WriteEmptyHandshakeMessageAsync(Memory<byte> negotiationData = default, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
 
