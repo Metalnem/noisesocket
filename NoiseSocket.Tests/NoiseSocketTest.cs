@@ -85,6 +85,9 @@ namespace Noise.Tests
 						respSocket = temp;
 					}
 
+					Assert.Equal(handshakeHash, initSocket.HandshakeHash.ToArray());
+					Assert.Equal(handshakeHash, respSocket.HandshakeHash.ToArray());
+
 					initSocket.Dispose();
 					respSocket.Dispose();
 				}
