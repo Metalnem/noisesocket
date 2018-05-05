@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
@@ -32,6 +33,7 @@ namespace Noise.Tests
 					var respConfig = new ProtocolConfig(false, respPrologue, respStatic, respRemoteStatic);
 
 					var protocol = Protocol.Parse(protocolName.AsSpan());
+					var isOneWay = protocol.HandshakePattern.Patterns.Count() == 1;
 
 					var initSocket = NoiseSocket.CreateClient(protocol, initConfig, stream, true);
 					var respSocket = NoiseSocket.CreateServer(stream, true);
@@ -39,7 +41,7 @@ namespace Noise.Tests
 					initSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, initEphemeral));
 					respSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, respEphemeral));
 
-					bool accepted = false;
+					int index = 0;
 
 					foreach (var message in vector["messages"])
 					{
@@ -60,14 +62,19 @@ namespace Noise.Tests
 							var respNegotiationData = respSocket.ReadNegotiationDataAsync().GetAwaiter().GetResult();
 							Assert.Equal(negotiationData, respNegotiationData);
 
-							if (!accepted)
+							if (index == 0)
 							{
 								respSocket.Accept(protocol, respConfig);
-								accepted = true;
 							}
 
 							var respMessageBody = respSocket.ReadHandshakeMessageAsync().GetAwaiter().GetResult();
 							Assert.Equal(messageBody, respMessageBody);
+						}
+						else if (isOneWay && index == 1)
+						{
+							respSocket.WriteEmptyHandshakeMessageAsync().GetAwaiter().GetResult();
+							var respMessage = Utilities.ReadMessageRaw(stream);
+							Assert.Equal(value, respMessage);
 						}
 						else
 						{
@@ -80,9 +87,14 @@ namespace Noise.Tests
 							Assert.Equal(messageBody, respMessageBody);
 						}
 
-						var temp = initSocket;
-						initSocket = respSocket;
-						respSocket = temp;
+						if (!isOneWay)
+						{
+							var temp = initSocket;
+							initSocket = respSocket;
+							respSocket = temp;
+						}
+
+						++index;
 					}
 
 					Assert.Equal(handshakeHash, initSocket.HandshakeHash.ToArray());
