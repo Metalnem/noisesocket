@@ -10,6 +10,9 @@ namespace Noise.Tests
 		[JsonProperty("message_body")]
 		public string MessageBody;
 
+		[JsonProperty("padded_length")]
+		public int? PaddedLength;
+
 		[JsonProperty("message")]
 		public string Value;
 	}

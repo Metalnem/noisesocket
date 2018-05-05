@@ -71,6 +71,7 @@ namespace Noise.Tests
 
 					var messages = new List<Message>();
 					var hasData = true;
+					var paddedLength = (ushort)protocol.PaddedLength;
 
 					for (int i = 0; i < messagesHex.Count; ++i)
 					{
@@ -79,12 +80,14 @@ namespace Noise.Tests
 						if (initSocket.HandshakeHash.IsEmpty)
 						{
 							var negotiationData = hasData ? NegotiationDataRaw : null;
-							initSocket.WriteHandshakeMessageAsync(negotiationData, messagesRaw[i]).GetAwaiter().GetResult();
+							var isNextMessageEncrypted = initSocket.IsNextMessageEncrypted;
+							initSocket.WriteHandshakeMessageAsync(negotiationData, messagesRaw[i], paddedLength).GetAwaiter().GetResult();
 
 							var message = new Message
 							{
 								NegotiationData = hasData ? NegotiationDataHex : null,
 								MessageBody = messagesHex[i],
+								PaddedLength = isNextMessageEncrypted ? paddedLength : (int?)null,
 								Value = Utilities.ReadMessageHex(stream)
 							};
 
@@ -103,8 +106,16 @@ namespace Noise.Tests
 						}
 						else
 						{
-							initSocket.WriteMessageAsync(messagesRaw[i]).GetAwaiter().GetResult();
-							messages.Add(new Message { MessageBody = messagesHex[i], Value = Utilities.ReadMessageHex(stream) });
+							initSocket.WriteMessageAsync(messagesRaw[i], paddedLength).GetAwaiter().GetResult();
+
+							var message = new Message
+							{
+								MessageBody = messagesHex[i],
+								PaddedLength = paddedLength,
+								Value = Utilities.ReadMessageHex(stream)
+							};
+
+							messages.Add(message);
 						}
 
 						var temp = initSocket;
@@ -174,6 +185,15 @@ namespace Noise.Tests
 			}
 		}
 
+		private static IEnumerable<int> PaddedLengths
+		{
+			get
+			{
+				yield return 0;
+				yield return 32;
+			}
+		}
+
 		private static IEnumerable<ProtocolDetails> GetProtocols()
 		{
 			foreach (var pattern in Patterns)
@@ -190,16 +210,20 @@ namespace Noise.Tests
 					{
 						var protocol = new Protocol(pattern, cipher, hash);
 
-						yield return new ProtocolDetails
+						foreach (var paddedLength in PaddedLengths)
 						{
-							Protocol = protocol,
-							NameBytes = protocol.Name,
-							NameString = Encoding.ASCII.GetString(protocol.Name),
-							InitStaticRequired = initStaticRequired,
-							InitRemoteStaticRequired = initRemoteStaticRequired,
-							RespStaticRequired = respStaticRequired,
-							RespRemoteStaticRequired = respRemoteStaticRequired
-						};
+							yield return new ProtocolDetails
+							{
+								Protocol = protocol,
+								NameBytes = protocol.Name,
+								NameString = Encoding.ASCII.GetString(protocol.Name),
+								InitStaticRequired = initStaticRequired,
+								InitRemoteStaticRequired = initRemoteStaticRequired,
+								RespStaticRequired = respStaticRequired,
+								RespRemoteStaticRequired = respRemoteStaticRequired,
+								PaddedLength = paddedLength
+							};
+						}
 					}
 				}
 			}

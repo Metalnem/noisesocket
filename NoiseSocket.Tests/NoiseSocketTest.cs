@@ -47,11 +47,12 @@ namespace Noise.Tests
 
 						var negotiationData = GetBytes(message, "negotiation_data");
 						var messageBody = GetBytes(message, "message_body");
+						var paddedLength = (ushort?)message["padded_length"] ?? 0;
 						var value = GetBytes(message, "message");
 
 						if (initSocket.HandshakeHash.IsEmpty)
 						{
-							initSocket.WriteHandshakeMessageAsync(negotiationData, messageBody).GetAwaiter().GetResult();
+							initSocket.WriteHandshakeMessageAsync(negotiationData, messageBody, paddedLength).GetAwaiter().GetResult();
 							var initMessage = Utilities.ReadMessageRaw(stream);
 							Assert.Equal(value, initMessage);
 
@@ -70,7 +71,7 @@ namespace Noise.Tests
 						}
 						else
 						{
-							initSocket.WriteMessageAsync(messageBody).GetAwaiter().GetResult();
+							initSocket.WriteMessageAsync(messageBody, paddedLength).GetAwaiter().GetResult();
 							var initMessage = Utilities.ReadMessageRaw(stream);
 							Assert.Equal(value, initMessage);
 

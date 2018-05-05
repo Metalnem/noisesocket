@@ -73,6 +73,14 @@ namespace Noise
 		}
 
 		/// <summary>
+		/// NoiseSocket.Tests use this value to determine whether
+		/// to include the padding in generated test vectors or not,
+		/// because the padded length is ignored if the handshake
+		/// message is not encrypted.
+		/// </summary>
+		internal bool IsNextMessageEncrypted => isNextMessageEncrypted;
+
+		/// <summary>
 		/// Initializes a new client instance of the <see cref="NoiseSocket"/> class.
 		/// </summary>
 		/// <param name="protocol">A concrete Noise protocol (e.g. Noise_XX_25519_AESGCM_BLAKE2b).</param>
