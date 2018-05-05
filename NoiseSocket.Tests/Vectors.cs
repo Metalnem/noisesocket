@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 
 namespace Noise.Tests
@@ -175,35 +174,25 @@ namespace Noise.Tests
 
 		private static IEnumerable<ProtocolDetails> GetProtocols()
 		{
-			var flags = BindingFlags.Instance | BindingFlags.NonPublic;
-			var localStaticRequiredMethod = typeof(HandshakePattern).GetMethod("LocalStaticRequired", flags);
-			var remoteStaticRequiredMethod = typeof(HandshakePattern).GetMethod("RemoteStaticRequired", flags);
-			var nameProperty = typeof(Protocol).GetProperty("Name", flags);
-
-			var trueArray = new object[] { true };
-			var falseArray = new object[] { false };
-
 			foreach (var pattern in Patterns)
 			{
-				bool initStaticRequired = (bool)localStaticRequiredMethod.Invoke(pattern, trueArray);
-				bool initRemoteStaticRequired = (bool)remoteStaticRequiredMethod.Invoke(pattern, trueArray);
+				bool initStaticRequired = pattern.LocalStaticRequired(true);
+				bool initRemoteStaticRequired = pattern.RemoteStaticRequired(true);
 
-				bool respStaticRequired = (bool)localStaticRequiredMethod.Invoke(pattern, falseArray);
-				bool respRemoteStaticRequired = (bool)remoteStaticRequiredMethod.Invoke(pattern, falseArray);
+				bool respStaticRequired = pattern.LocalStaticRequired(false);
+				bool respRemoteStaticRequired = pattern.RemoteStaticRequired(false);
 
 				foreach (var cipher in Ciphers)
 				{
 					foreach (var hash in Hashes)
 					{
 						var protocol = new Protocol(pattern, cipher, hash);
-						var nameBytes = (byte[])nameProperty.GetValue(protocol);
-						var nameString = Encoding.ASCII.GetString(nameBytes);
 
 						yield return new ProtocolDetails
 						{
 							Protocol = protocol,
-							NameBytes = nameBytes,
-							NameString = nameString,
+							NameBytes = protocol.Name,
+							NameString = Encoding.ASCII.GetString(protocol.Name),
 							InitStaticRequired = initStaticRequired,
 							InitRemoteStaticRequired = initRemoteStaticRequired,
 							RespStaticRequired = respStaticRequired,
