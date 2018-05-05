@@ -1,6 +1,6 @@
 namespace Noise.Tests
 {
-	internal sealed class ProtocolDetails
+	internal sealed class TestConfig
 	{
 		public Protocol Protocol;
 		public byte[] NameBytes;

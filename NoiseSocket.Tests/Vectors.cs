@@ -47,23 +47,23 @@ namespace Noise.Tests
 		{
 			using (var stream = new MemoryStream())
 			{
-				foreach (var protocol in GetProtocols())
+				foreach (var config in GetTestConfigs())
 				{
 					var initConfig = new ProtocolConfig(
 						initiator: true,
 						prologue: PrologueRaw,
-						s: protocol.InitStaticRequired ? InitStaticRaw : null,
-						rs: protocol.InitRemoteStaticRequired ? RespStaticPublicRaw : null
+						s: config.InitStaticRequired ? InitStaticRaw : null,
+						rs: config.InitRemoteStaticRequired ? RespStaticPublicRaw : null
 					);
 
 					var respConfig = new ProtocolConfig(
 						initiator: false,
 						prologue: PrologueRaw,
-						s: protocol.RespStaticRequired ? RespStaticRaw : null,
-						rs: protocol.RespRemoteStaticRequired ? InitStaticPublicRaw : null
+						s: config.RespStaticRequired ? RespStaticRaw : null,
+						rs: config.RespRemoteStaticRequired ? InitStaticPublicRaw : null
 					);
 
-					var initSocket = NoiseSocket.CreateClient(protocol.Protocol, initConfig, stream, true);
+					var initSocket = NoiseSocket.CreateClient(config.Protocol, initConfig, stream, true);
 					var respSocket = NoiseSocket.CreateServer(stream, true);
 
 					initSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, InitEphemeralRaw.ToArray()));
@@ -71,7 +71,7 @@ namespace Noise.Tests
 
 					var messages = new List<Message>();
 					var hasData = true;
-					var paddedLength = (ushort)protocol.PaddedLength;
+					var paddedLength = (ushort)config.PaddedLength;
 
 					for (int i = 0; i < messagesHex.Count; ++i)
 					{
@@ -99,7 +99,7 @@ namespace Noise.Tests
 
 							if (i == 0)
 							{
-								respSocket.Accept(protocol.Protocol, respConfig);
+								respSocket.Accept(config.Protocol, respConfig);
 							}
 
 							respSocket.ReadHandshakeMessageAsync().GetAwaiter().GetResult();
@@ -125,15 +125,15 @@ namespace Noise.Tests
 
 					var vector = new Vector
 					{
-						ProtocolName = protocol.NameString,
+						ProtocolName = config.NameString,
 						InitPrologue = PrologueHex,
-						InitStatic = protocol.InitStaticRequired ? InitStaticHex : null,
+						InitStatic = config.InitStaticRequired ? InitStaticHex : null,
 						InitEphemeral = InitEphemeralHex,
-						InitRemoteStatic = protocol.InitRemoteStaticRequired ? RespStaticPublicHex : null,
+						InitRemoteStatic = config.InitRemoteStaticRequired ? RespStaticPublicHex : null,
 						RespPrologue = PrologueHex,
-						RespStatic = protocol.RespStaticRequired ? RespStaticHex : null,
+						RespStatic = config.RespStaticRequired ? RespStaticHex : null,
 						RespEphemeral = RespEphemeralHex,
-						RespRemoteStatic = protocol.RespRemoteStaticRequired ? InitStaticPublicHex : null,
+						RespRemoteStatic = config.RespRemoteStaticRequired ? InitStaticPublicHex : null,
 						HandshakeHash = Hex.Encode(initSocket.HandshakeHash.ToArray()),
 						Messages = messages
 					};
@@ -194,7 +194,7 @@ namespace Noise.Tests
 			}
 		}
 
-		private static IEnumerable<ProtocolDetails> GetProtocols()
+		private static IEnumerable<TestConfig> GetTestConfigs()
 		{
 			foreach (var pattern in Patterns)
 			{
@@ -212,7 +212,7 @@ namespace Noise.Tests
 
 						foreach (var paddedLength in PaddedLengths)
 						{
-							yield return new ProtocolDetails
+							yield return new TestConfig
 							{
 								Protocol = protocol,
 								NameBytes = protocol.Name,
