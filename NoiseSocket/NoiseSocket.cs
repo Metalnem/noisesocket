@@ -716,33 +716,37 @@ namespace Noise
 
 			var prologue = this.config.Prologue.AsSpan();
 			var length = noiseSocketInit.Length + savedMessages.Sum(message => LenFieldSize + message.Data.Length) + prologue.Length;
-			var buffer = new byte[length];
+			var pool = ArrayPool<byte>.Shared;
+			var buffer = pool.Rent(length);
 
-			noiseSocketInit.AsSpan().CopyTo(buffer);
-			var next = buffer.AsSpan(noiseSocketInit.Length);
-
-			foreach (var message in savedMessages)
+			try
 			{
-				WritePacket(message.Data.Span, next);
-				next = next.Slice(LenFieldSize + message.Data.Length);
+				noiseSocketInit.AsSpan().CopyTo(buffer);
+				var next = buffer.AsSpan(noiseSocketInit.Length);
+
+				foreach (var message in savedMessages)
+				{
+					WritePacket(message.Data.Span, next);
+					next = next.Slice(LenFieldSize + message.Data.Length);
+				}
+
+				prologue.CopyTo(next);
+
+				var handshakeState = protocol.Create(
+					config.Initiator,
+					buffer.AsSpan(0, length),
+					config.LocalStatic,
+					config.RemoteStatic,
+					config.PreSharedKeys
+				);
+
+				initializer?.Invoke(handshakeState);
+				return handshakeState;
 			}
-
-			prologue.CopyTo(next);
-
-			var handshakeState = protocol.Create(
-				config.Initiator,
-				buffer,
-				config.LocalStatic,
-				config.RemoteStatic,
-				config.PreSharedKeys
-			);
-
-			if (initializer != null)
+			finally
 			{
-				initializer(handshakeState);
+				pool.Return(buffer);
 			}
-
-			return handshakeState;
 		}
 
 		private bool IsPrologueValid()
