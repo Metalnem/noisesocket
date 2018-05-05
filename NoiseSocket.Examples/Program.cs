@@ -13,6 +13,7 @@ namespace Noise.Examples
 		{
 			await AcceptExample.Run();
 			await SwitchExample.Run();
+			await RetryExample.Run();
 		}
 	}
 }
