@@ -26,12 +26,16 @@
 
 [Acceptance] (using [TcpClient] and [TcpListener])  
 [Switch protocol] (using ordinary [Socket])
+[Retry request] (using [NamedPipeClientStream] and [NamedPipeServerStream])
 
 [Acceptance]: https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket.Examples/AcceptExample.cs
 [Switch protocol]: https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket.Examples/SwitchExample.cs
+[Retry request]: https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket.Examples/RetryExample.cs
 [TcpClient]: https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.tcpclient?view=netstandard-2.0
 [TcpListener]: https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.tcplistener?view=netstandard-2.0
 [Socket]: https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?view=netstandard-2.0
+[NamedPipeClientStream]: https://docs.microsoft.com/en-us/dotnet/api/system.io.pipes.namedpipeclientstream?view=netstandard-2.0
+[NamedPipeServerStream]: https://docs.microsoft.com/en-us/dotnet/api/system.io.pipes.namedpipeserverstream?view=netstandard-2.0
 
 ## Installation
 
