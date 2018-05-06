@@ -7,28 +7,28 @@ namespace Noise.Tests
 		[JsonProperty("protocol_name")]
 		public string ProtocolName;
 
-		[JsonProperty("init_static")]
+		[JsonProperty("alice_static")]
 		[JsonConverter(typeof(ByteArrayConverter))]
-		public byte[] InitStatic;
+		public byte[] AliceStatic;
 
-		[JsonProperty("init_ephemeral")]
+		[JsonProperty("alice_ephemeral")]
 		[JsonConverter(typeof(ByteArrayConverter))]
-		public byte[] InitEphemeral;
+		public byte[] AliceEphemeral;
 
-		[JsonProperty("init_remote_static")]
+		[JsonProperty("alice_remote_static")]
 		[JsonConverter(typeof(ByteArrayConverter))]
-		public byte[] InitRemoteStatic;
+		public byte[] AliceRemoteStatic;
 
-		[JsonProperty("resp_static")]
+		[JsonProperty("bob_static")]
 		[JsonConverter(typeof(ByteArrayConverter))]
-		public byte[] RespStatic;
+		public byte[] BobStatic;
 
-		[JsonProperty("resp_ephemeral")]
+		[JsonProperty("bob_ephemeral")]
 		[JsonConverter(typeof(ByteArrayConverter))]
-		public byte[] RespEphemeral;
+		public byte[] BobEphemeral;
 
-		[JsonProperty("resp_remote_static")]
+		[JsonProperty("bob_remote_static")]
 		[JsonConverter(typeof(ByteArrayConverter))]
-		public byte[] RespRemoteStatic;
+		public byte[] BobRemoteStatic;
 	}
 }

@@ -26,39 +26,39 @@ namespace Noise.Tests
 					var switchConfig = vector["switch"];
 					var retryConfig = vector["retry"];
 
-					var initPrologue = GetBytes(vector, "init_prologue");
-					var respPrologue = GetBytes(vector, "resp_prologue");
+					var alicePrologue = GetBytes(vector, "alice_prologue");
+					var bobPrologue = GetBytes(vector, "bob_prologue");
 					var handshakeHash = GetBytes(vector, "handshake_hash");
 
 					var config = vector["initial"].ToObject<Config>();
-					var initConfig = new ProtocolConfig(true, initPrologue, config.InitStatic, config.InitRemoteStatic);
-					var respConfig = new ProtocolConfig(false, respPrologue, config.RespStatic, config.RespRemoteStatic);
+					var aliceConfig = new ProtocolConfig(true, alicePrologue, config.AliceStatic, config.AliceRemoteStatic);
+					var bobConfig = new ProtocolConfig(false, bobPrologue, config.BobStatic, config.BobRemoteStatic);
 
 					var protocol = Protocol.Parse(config.ProtocolName.AsSpan());
 					var queue = ReadMessages(vector["messages"]);
 
-					var initSocket = NoiseSocket.CreateClient(protocol, initConfig, stream, true);
-					var respSocket = NoiseSocket.CreateServer(stream, true);
+					var alice = NoiseSocket.CreateClient(protocol, aliceConfig, stream, true);
+					var bob = NoiseSocket.CreateServer(stream, true);
 
-					initSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, config.InitEphemeral.ToArray()));
-					respSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, config.RespEphemeral.ToArray()));
+					alice.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, config.AliceEphemeral.ToArray()));
+					bob.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, config.BobEphemeral.ToArray()));
 
-					var writer = initSocket;
-					var reader = respSocket;
+					var writer = alice;
+					var reader = bob;
 
 					if (switchConfig == null && retryConfig == null)
 					{
 						var message = queue.Dequeue();
 						stream.Position = 0;
 
-						await initSocket.WriteHandshakeMessageAsync(message.NegotiationData, message.MessageBody, message.PaddedLength);
+						await alice.WriteHandshakeMessageAsync(message.NegotiationData, message.MessageBody, message.PaddedLength);
 						Assert.Equal(message.Value, Utilities.ReadMessage(stream));
 
 						stream.Position = 0;
-						Assert.Equal(message.NegotiationData ?? empty, await respSocket.ReadNegotiationDataAsync());
+						Assert.Equal(message.NegotiationData ?? empty, await bob.ReadNegotiationDataAsync());
 
-						respSocket.Accept(protocol, respConfig);
-						Assert.Equal(message.MessageBody, await respSocket.ReadHandshakeMessageAsync());
+						bob.Accept(protocol, bobConfig);
+						Assert.Equal(message.MessageBody, await bob.ReadHandshakeMessageAsync());
 
 						Utilities.Swap(ref writer, ref reader);
 					}
@@ -67,32 +67,32 @@ namespace Noise.Tests
 						config = retryConfig.ToObject<Config>();
 						protocol = Protocol.Parse(config.ProtocolName.AsSpan());
 
-						initConfig = new ProtocolConfig(true, initPrologue, config.InitStatic, config.InitRemoteStatic);
-						respConfig = new ProtocolConfig(false, respPrologue, config.RespStatic, config.RespRemoteStatic);
+						aliceConfig = new ProtocolConfig(true, alicePrologue, config.AliceStatic, config.AliceRemoteStatic);
+						bobConfig = new ProtocolConfig(false, bobPrologue, config.BobStatic, config.BobRemoteStatic);
 
 						var message = queue.Dequeue();
 						stream.Position = 0;
 
-						await initSocket.WriteHandshakeMessageAsync(message.NegotiationData, message.MessageBody, message.PaddedLength);
+						await alice.WriteHandshakeMessageAsync(message.NegotiationData, message.MessageBody, message.PaddedLength);
 						Assert.Equal(message.Value, Utilities.ReadMessage(stream));
 
 						stream.Position = 0;
-						Assert.Equal(message.NegotiationData ?? empty, await respSocket.ReadNegotiationDataAsync());
+						Assert.Equal(message.NegotiationData ?? empty, await bob.ReadNegotiationDataAsync());
 
-						respSocket.Retry(protocol, respConfig);
-						await respSocket.IgnoreHandshakeMessageAsync();
+						bob.Retry(protocol, bobConfig);
+						await bob.IgnoreHandshakeMessageAsync();
 
 						message = queue.Dequeue();
 						stream.Position = 0;
 
-						await respSocket.WriteEmptyHandshakeMessageAsync(message.NegotiationData);
+						await bob.WriteEmptyHandshakeMessageAsync(message.NegotiationData);
 						Assert.Equal(message.Value, Utilities.ReadMessage(stream));
 
 						stream.Position = 0;
-						Assert.Equal(message.NegotiationData ?? empty, await initSocket.ReadNegotiationDataAsync());
+						Assert.Equal(message.NegotiationData ?? empty, await alice.ReadNegotiationDataAsync());
 
-						initSocket.Retry(protocol, initConfig);
-						await initSocket.IgnoreHandshakeMessageAsync();
+						alice.Retry(protocol, aliceConfig);
+						await alice.IgnoreHandshakeMessageAsync();
 					}
 
 					while (queue.Count > 0)

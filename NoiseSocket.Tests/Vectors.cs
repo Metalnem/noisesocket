@@ -12,23 +12,23 @@ namespace Noise.Tests
 		private const string PrologueHex = "4a6f686e2047616c74";
 		private static readonly byte[] PrologueRaw = Hex.Decode(PrologueHex);
 
-		private const string InitStaticHex = "e61ef9919cde45dd5f82166404bd08e38bceb5dfdfded0a34c8df7ed542214d1";
-		private static readonly byte[] InitStaticRaw = Hex.Decode(InitStaticHex);
+		private const string AliceStaticHex = "e61ef9919cde45dd5f82166404bd08e38bceb5dfdfded0a34c8df7ed542214d1";
+		private static readonly byte[] AliceStaticRaw = Hex.Decode(AliceStaticHex);
 
-		private const string InitStaticPublicHex = "6bc3822a2aa7f4e6981d6538692b3cdf3e6df9eea6ed269eb41d93c22757b75a";
-		private static readonly byte[] InitStaticPublicRaw = Hex.Decode(InitStaticPublicHex);
+		private const string AliceStaticPublicHex = "6bc3822a2aa7f4e6981d6538692b3cdf3e6df9eea6ed269eb41d93c22757b75a";
+		private static readonly byte[] AliceStaticPublicRaw = Hex.Decode(AliceStaticPublicHex);
 
-		private const string InitEphemeralHex = "893e28b9dc6ca8d611ab664754b8ceb7bac5117349a4439a6b0569da977c464a";
-		private static readonly byte[] InitEphemeralRaw = Hex.Decode(InitEphemeralHex);
+		private const string AliceEphemeralHex = "893e28b9dc6ca8d611ab664754b8ceb7bac5117349a4439a6b0569da977c464a";
+		private static readonly byte[] AliceEphemeralRaw = Hex.Decode(AliceEphemeralHex);
 
-		private const string RespStaticHex = "4a3acbfdb163dec651dfa3194dece676d437029c62a408b4c5ea9114246e4893";
-		private static readonly byte[] RespStaticRaw = Hex.Decode(RespStaticHex);
+		private const string BobStaticHex = "4a3acbfdb163dec651dfa3194dece676d437029c62a408b4c5ea9114246e4893";
+		private static readonly byte[] BobStaticRaw = Hex.Decode(BobStaticHex);
 
-		private const string RespStaticPublicHex = "31e0303fd6418d2f8c0e78b91f22e8caed0fbe48656dcf4767e4834f701b8f62";
-		private static readonly byte[] RespStaticPublicRaw = Hex.Decode(RespStaticPublicHex);
+		private const string BobStaticPublicHex = "31e0303fd6418d2f8c0e78b91f22e8caed0fbe48656dcf4767e4834f701b8f62";
+		private static readonly byte[] BobStaticPublicRaw = Hex.Decode(BobStaticPublicHex);
 
-		private const string RespEphemeralHex = "bbdb4cdbd309f1a1f2e1456967fe288cadd6f712d65dc7b7793d5e63da6b375b";
-		private static readonly byte[] RespEphemeralRaw = Hex.Decode(RespEphemeralHex);
+		private const string BobEphemeralHex = "bbdb4cdbd309f1a1f2e1456967fe288cadd6f712d65dc7b7793d5e63da6b375b";
+		private static readonly byte[] BobEphemeralRaw = Hex.Decode(BobEphemeralHex);
 
 		private static readonly byte[] InitialNegotiationData = Hex.Decode("4e6f697365536f636b6574");
 		private static readonly byte[] SwitchNegotiationData = Hex.Decode("537769746368");
@@ -52,57 +52,57 @@ namespace Noise.Tests
 			{
 				foreach (var test in GetTests())
 				{
-					var initConfig = new ProtocolConfig(
+					var aliceConfig = new ProtocolConfig(
 						initiator: true,
 						prologue: PrologueRaw,
-						s: test.InitStaticRequired ? InitStaticRaw : null,
-						rs: test.InitRemoteStaticRequired ? RespStaticPublicRaw : null
+						s: test.InitStaticRequired ? AliceStaticRaw : null,
+						rs: test.InitRemoteStaticRequired ? BobStaticPublicRaw : null
 					);
 
-					var respConfig = new ProtocolConfig(
+					var bobConfig = new ProtocolConfig(
 						initiator: false,
 						prologue: PrologueRaw,
-						s: test.RespStaticRequired ? RespStaticRaw : null,
-						rs: test.RespRemoteStaticRequired ? InitStaticPublicRaw : null
+						s: test.RespStaticRequired ? BobStaticRaw : null,
+						rs: test.RespRemoteStaticRequired ? AliceStaticPublicRaw : null
 					);
 
-					var initSocket = NoiseSocket.CreateClient(test.Protocol, initConfig, stream, true);
-					var respSocket = NoiseSocket.CreateServer(stream, true);
+					var alice = NoiseSocket.CreateClient(test.Protocol, aliceConfig, stream, true);
+					var bob = NoiseSocket.CreateServer(stream, true);
 
-					initSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, InitEphemeralRaw.ToArray()));
-					respSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, RespEphemeralRaw.ToArray()));
+					alice.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, AliceEphemeralRaw.ToArray()));
+					bob.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, BobEphemeralRaw.ToArray()));
 
 					var proxy = new SocketProxy(stream, (ushort)test.PaddedLength);
 					var queue = new Queue<byte[]>(payloads);
 
-					var writer = initSocket;
-					var reader = respSocket;
+					var writer = alice;
+					var reader = bob;
 
 					if (test.Response == Response.Accept)
 					{
-						await proxy.WriteHandshakeMessageAsync(initSocket, InitialNegotiationData, queue.Dequeue());
-						await respSocket.ReadNegotiationDataAsync();
-						respSocket.Accept(test.Protocol, respConfig);
+						await proxy.WriteHandshakeMessageAsync(alice, InitialNegotiationData, queue.Dequeue());
+						await bob.ReadNegotiationDataAsync();
+						bob.Accept(test.Protocol, bobConfig);
 
-						await respSocket.ReadHandshakeMessageAsync();
+						await bob.ReadHandshakeMessageAsync();
 						stream.Position = 0;
 
 						Utilities.Swap(ref writer, ref reader);
 					}
 					else if (test.Response == Response.Retry)
 					{
-						await proxy.WriteHandshakeMessageAsync(initSocket, InitialNegotiationData, queue.Dequeue());
-						await respSocket.ReadNegotiationDataAsync();
-						respSocket.Retry(test.Protocol, respConfig);
+						await proxy.WriteHandshakeMessageAsync(alice, InitialNegotiationData, queue.Dequeue());
+						await bob.ReadNegotiationDataAsync();
+						bob.Retry(test.Protocol, bobConfig);
 
-						await respSocket.IgnoreHandshakeMessageAsync();
+						await bob.IgnoreHandshakeMessageAsync();
 						stream.Position = 0;
 
-						await proxy.WriteEmptyHandshakeMessageAsync(respSocket, RetryNegotiationData);
-						await initSocket.ReadNegotiationDataAsync();
-						initSocket.Retry(test.Protocol, initConfig);
+						await proxy.WriteEmptyHandshakeMessageAsync(bob, RetryNegotiationData);
+						await alice.ReadNegotiationDataAsync();
+						alice.Retry(test.Protocol, aliceConfig);
 
-						await initSocket.IgnoreHandshakeMessageAsync();
+						await alice.IgnoreHandshakeMessageAsync();
 						stream.Position = 0;
 					}
 
@@ -126,12 +126,12 @@ namespace Noise.Tests
 					var initial = new Config
 					{
 						ProtocolName = test.Name,
-						InitStatic = test.InitStaticRequired ? InitStaticRaw : null,
-						InitEphemeral = InitEphemeralRaw,
-						InitRemoteStatic = test.InitRemoteStaticRequired ? RespStaticPublicRaw : null,
-						RespStatic = test.RespStaticRequired ? RespStaticRaw : null,
-						RespEphemeral = RespEphemeralRaw,
-						RespRemoteStatic = test.RespRemoteStaticRequired ? InitStaticPublicRaw : null
+						AliceStatic = test.InitStaticRequired ? AliceStaticRaw : null,
+						AliceEphemeral = AliceEphemeralRaw,
+						AliceRemoteStatic = test.InitRemoteStaticRequired ? BobStaticPublicRaw : null,
+						BobStatic = test.RespStaticRequired ? BobStaticRaw : null,
+						BobEphemeral = BobEphemeralRaw,
+						BobRemoteStatic = test.RespRemoteStaticRequired ? AliceStaticPublicRaw : null
 					};
 
 					var vector = new Vector
@@ -139,8 +139,8 @@ namespace Noise.Tests
 						Initial = initial,
 						Switch = test.Response == Response.Switch ? initial : null,
 						Retry = test.Response == Response.Retry ? initial : null,
-						InitPrologue = PrologueHex,
-						RespPrologue = PrologueHex,
+						AlicePrologue = PrologueHex,
+						BobPrologue = PrologueHex,
 						HandshakeHash = Hex.Encode(writer.HandshakeHash.ToArray()),
 						Messages = proxy.Messages
 					};

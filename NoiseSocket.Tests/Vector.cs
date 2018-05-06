@@ -14,11 +14,11 @@ namespace Noise.Tests
 		[JsonProperty("retry")]
 		public Config Retry;
 
-		[JsonProperty("init_prologue")]
-		public string InitPrologue;
+		[JsonProperty("alice_prologue")]
+		public string AlicePrologue;
 
-		[JsonProperty("resp_prologue")]
-		public string RespPrologue;
+		[JsonProperty("bob_prologue")]
+		public string BobPrologue;
 
 		[JsonProperty("handshake_hash")]
 		public string HandshakeHash;
