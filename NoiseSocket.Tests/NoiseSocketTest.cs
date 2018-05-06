@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -10,8 +9,6 @@ namespace Noise.Tests
 {
 	public class NoiseSocketTest
 	{
-		private static readonly byte[] empty = Array.Empty<byte>();
-
 		[Fact]
 		public async Task TestVectors()
 		{
@@ -58,7 +55,7 @@ namespace Noise.Tests
 						Assert.Equal(message.Value, Utilities.ReadMessage(stream));
 
 						stream.Position = 0;
-						Assert.Equal(message.NegotiationData ?? empty, await bob.ReadNegotiationDataAsync());
+						Assert.Equal(message.NegotiationData, await bob.ReadNegotiationDataAsync());
 
 						bob.Accept(protocol, bobConfig);
 						Assert.Equal(message.MessageBody, await bob.ReadHandshakeMessageAsync());
@@ -80,7 +77,7 @@ namespace Noise.Tests
 						Assert.Equal(message.Value, Utilities.ReadMessage(stream));
 
 						stream.Position = 0;
-						Assert.Equal(message.NegotiationData ?? empty, await bob.ReadNegotiationDataAsync());
+						Assert.Equal(message.NegotiationData, await bob.ReadNegotiationDataAsync());
 
 						bob.Switch(protocol, bobConfig);
 						bob.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, config.BobEphemeral));
@@ -93,7 +90,7 @@ namespace Noise.Tests
 						Assert.Equal(message.Value, Utilities.ReadMessage(stream));
 
 						stream.Position = 0;
-						Assert.Equal(message.NegotiationData ?? empty, await alice.ReadNegotiationDataAsync());
+						Assert.Equal(message.NegotiationData, await alice.ReadNegotiationDataAsync());
 
 						alice.Switch(protocol, aliceConfig);
 						alice.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, config.AliceEphemeral));
@@ -114,7 +111,7 @@ namespace Noise.Tests
 						Assert.Equal(message.Value, Utilities.ReadMessage(stream));
 
 						stream.Position = 0;
-						Assert.Equal(message.NegotiationData ?? empty, await bob.ReadNegotiationDataAsync());
+						Assert.Equal(message.NegotiationData, await bob.ReadNegotiationDataAsync());
 
 						bob.Retry(protocol, bobConfig);
 						bob.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, config.BobEphemeral));
@@ -127,7 +124,7 @@ namespace Noise.Tests
 						Assert.Equal(message.Value, Utilities.ReadMessage(stream));
 
 						stream.Position = 0;
-						Assert.Equal(message.NegotiationData ?? empty, await alice.ReadNegotiationDataAsync());
+						Assert.Equal(message.NegotiationData, await alice.ReadNegotiationDataAsync());
 
 						alice.Retry(protocol, aliceConfig);
 						alice.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, config.AliceEphemeral));
@@ -145,7 +142,7 @@ namespace Noise.Tests
 							Assert.Equal(message.Value, Utilities.ReadMessage(stream));
 
 							stream.Position = 0;
-							Assert.Equal(message.NegotiationData ?? empty, await reader.ReadNegotiationDataAsync());
+							Assert.Empty(await reader.ReadNegotiationDataAsync());
 							Assert.Equal(message.MessageBody, await reader.ReadHandshakeMessageAsync());
 						}
 						else
