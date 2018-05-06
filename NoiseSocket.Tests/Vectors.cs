@@ -29,8 +29,14 @@ namespace Noise.Tests
 		private const string RespEphemeralHex = "bbdb4cdbd309f1a1f2e1456967fe288cadd6f712d65dc7b7793d5e63da6b375b";
 		private static readonly byte[] RespEphemeralRaw = Hex.Decode(RespEphemeralHex);
 
-		private const string NegotiationDataHex = "4e6f697365536f636b6574";
-		private static readonly byte[] NegotiationDataRaw = Hex.Decode(NegotiationDataHex);
+		private const string InitialNegotiationDataHex = "4e6f697365536f636b6574";
+		private static readonly byte[] InitialNegotiationDataRaw = Hex.Decode(InitialNegotiationDataHex);
+
+		private const string SwitchNegotiationDataHex = "537769746368";
+		private static readonly byte[] SwitchNegotiationDataRaw = Hex.Decode(SwitchNegotiationDataHex);
+
+		private const string RetryNegotiationDataHex = "5265747279";
+		private static readonly byte[] RetryNegotiationDataRaw = Hex.Decode(RetryNegotiationDataHex);
 
 		private static readonly List<string> messagesHex = new List<string>
 		{
@@ -78,19 +84,22 @@ namespace Noise.Tests
 					bool hasData = true;
 					bool isOneWay = test.Protocol.HandshakePattern.Patterns.Count() == 1;
 
+					var writer = initSocket;
+					var reader = respSocket;
+
 					for (int i = 0; i < messagesHex.Count; ++i)
 					{
 						stream.Position = 0;
 
-						if (initSocket.HandshakeHash.IsEmpty)
+						if (writer.HandshakeHash.IsEmpty)
 						{
-							var negotiationData = hasData ? NegotiationDataRaw : null;
-							var isNextMessageEncrypted = initSocket.IsNextMessageEncrypted;
-							await initSocket.WriteHandshakeMessageAsync(negotiationData, messagesRaw[i], paddedLength);
+							var negotiationData = hasData ? InitialNegotiationDataRaw : null;
+							var isNextMessageEncrypted = writer.IsNextMessageEncrypted;
+							await writer.WriteHandshakeMessageAsync(negotiationData, messagesRaw[i], paddedLength);
 
 							var message = new Message
 							{
-								NegotiationData = hasData ? NegotiationDataHex : null,
+								NegotiationData = hasData ? InitialNegotiationDataHex : null,
 								MessageBody = messagesHex[i],
 								PaddedLength = isNextMessageEncrypted ? paddedLength : 0,
 								Value = Utilities.ReadMessageHex(stream)
@@ -100,25 +109,25 @@ namespace Noise.Tests
 							hasData = false;
 
 							stream.Position = 0;
-							await respSocket.ReadNegotiationDataAsync();
+							await reader.ReadNegotiationDataAsync();
 
 							if (i == 0)
 							{
-								respSocket.Accept(test.Protocol, respConfig);
+								reader.Accept(test.Protocol, respConfig);
 							}
 
-							await respSocket.ReadHandshakeMessageAsync();
+							await reader.ReadHandshakeMessageAsync();
 
 							if (isOneWay)
 							{
 								stream.Position = 0;
-								await respSocket.WriteEmptyHandshakeMessageAsync();
+								await reader.WriteEmptyHandshakeMessageAsync();
 								messages.Add(new Message { Value = Utilities.ReadMessageHex(stream) });
 							}
 						}
 						else
 						{
-							await initSocket.WriteMessageAsync(messagesRaw[i], paddedLength);
+							await writer.WriteMessageAsync(messagesRaw[i], paddedLength);
 
 							var message = new Message
 							{
@@ -132,9 +141,9 @@ namespace Noise.Tests
 
 						if (!isOneWay)
 						{
-							var temp = initSocket;
-							initSocket = respSocket;
-							respSocket = temp;
+							var temp = writer;
+							writer = reader;
+							reader = temp;
 						}
 					}
 
@@ -156,12 +165,12 @@ namespace Noise.Tests
 						Retry = test.Response == Response.Retry ? initial : null,
 						InitPrologue = PrologueHex,
 						RespPrologue = PrologueHex,
-						HandshakeHash = Hex.Encode(initSocket.HandshakeHash.ToArray()),
+						HandshakeHash = Hex.Encode(writer.HandshakeHash.ToArray()),
 						Messages = messages
 					};
 
-					initSocket.Dispose();
-					respSocket.Dispose();
+					writer.Dispose();
+					reader.Dispose();
 
 					vectors.Add(vector);
 				}
