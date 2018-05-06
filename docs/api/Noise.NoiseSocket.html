@@ -151,7 +151,7 @@ reliable, stream-based protocols such as TCP.</p>
     <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_HandshakeHash.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.HandshakeHash%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
   </span>
   <span class="small pull-right mobile-hide">
-    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L66">View Source</a>
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L71">View Source</a>
   </span>
   <a id="Noise_NoiseSocket_HandshakeHash_" data-uid="Noise.NoiseSocket.HandshakeHash*"></a>
   <h4 id="Noise_NoiseSocket_HandshakeHash" data-uid="Noise.NoiseSocket.HandshakeHash">HandshakeHash</h4>
@@ -202,7 +202,7 @@ It's available only after the handshake has been completed.</p>
     <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_Accept_Noise_Protocol_Noise_ProtocolConfig_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.Accept(Noise.Protocol%2CNoise.ProtocolConfig)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
   </span>
   <span class="small pull-right mobile-hide">
-    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L154">View Source</a>
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L169">View Source</a>
   </span>
   <a id="Noise_NoiseSocket_Accept_" data-uid="Noise.NoiseSocket.Accept*"></a>
   <h4 id="Noise_NoiseSocket_Accept_Noise_Protocol_Noise_ProtocolConfig_" data-uid="Noise.NoiseSocket.Accept(Noise.Protocol,Noise.ProtocolConfig)">Accept(Protocol, ProtocolConfig)</h4>
@@ -270,7 +270,8 @@ method was called by the client.</p>
       </tr>
       <tr>
         <td><span class="xref">System.ArgumentException</span></td>
-        <td><p>Thrown if the server attempted to accept a new protocol as an initiator.</p>
+        <td><p>Thrown if the server attempted to accept a new protocol as an initiator
+or the selected handshake pattern was a one-way pattern.</p>
 </td>
       </tr>
     </tbody>
@@ -280,7 +281,7 @@ method was called by the client.</p>
     <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_CreateClient_Noise_Protocol_Noise_ProtocolConfig_System_IO_Stream_System_Boolean_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.CreateClient(Noise.Protocol%2CNoise.ProtocolConfig%2CSystem.IO.Stream%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
   </span>
   <span class="small pull-right mobile-hide">
-    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L95">View Source</a>
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L109">View Source</a>
   </span>
   <a id="Noise_NoiseSocket_CreateClient_" data-uid="Noise.NoiseSocket.CreateClient*"></a>
   <h4 id="Noise_NoiseSocket_CreateClient_Noise_Protocol_Noise_ProtocolConfig_System_IO_Stream_System_Boolean_" data-uid="Noise.NoiseSocket.CreateClient(Noise.Protocol,Noise.ProtocolConfig,System.IO.Stream,System.Boolean)">CreateClient(Protocol, ProtocolConfig, Stream, Boolean)</h4>
@@ -361,7 +362,8 @@ method was called by the client.</p>
       </tr>
       <tr>
         <td><span class="xref">System.ArgumentException</span></td>
-        <td><p>Thrown if the client was initialized as a Noise protocol responder.</p>
+        <td><p>Thrown if the client was initialized as a Noise protocol responder
+or the selected handshake pattern was a one-way pattern.</p>
 </td>
       </tr>
     </tbody>
@@ -371,7 +373,7 @@ method was called by the client.</p>
     <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_CreateServer_System_IO_Stream_System_Boolean_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.CreateServer(System.IO.Stream%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
   </span>
   <span class="small pull-right mobile-hide">
-    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L121">View Source</a>
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L135">View Source</a>
   </span>
   <a id="Noise_NoiseSocket_CreateServer_" data-uid="Noise.NoiseSocket.CreateServer*"></a>
   <h4 id="Noise_NoiseSocket_CreateServer_System_IO_Stream_System_Boolean_" data-uid="Noise.NoiseSocket.CreateServer(System.IO.Stream,System.Boolean)">CreateServer(Stream, Boolean)</h4>
@@ -444,7 +446,7 @@ method was called by the client.</p>
     <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_Dispose.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.Dispose%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
   </span>
   <span class="small pull-right mobile-hide">
-    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L915">View Source</a>
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L937">View Source</a>
   </span>
   <a id="Noise_NoiseSocket_Dispose_" data-uid="Noise.NoiseSocket.Dispose*"></a>
   <h4 id="Noise_NoiseSocket_Dispose" data-uid="Noise.NoiseSocket.Dispose">Dispose()</h4>
@@ -461,7 +463,7 @@ instance of the <a class="xref" href="Noise.NoiseSocket.html">NoiseSocket</a> cl
     <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_IgnoreHandshakeMessageAsync_System_Threading_CancellationToken_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.IgnoreHandshakeMessageAsync(System.Threading.CancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
   </span>
   <span class="small pull-right mobile-hide">
-    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L551">View Source</a>
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L573">View Source</a>
   </span>
   <a id="Noise_NoiseSocket_IgnoreHandshakeMessageAsync_" data-uid="Noise.NoiseSocket.IgnoreHandshakeMessageAsync*"></a>
   <h4 id="Noise_NoiseSocket_IgnoreHandshakeMessageAsync_System_Threading_CancellationToken_" data-uid="Noise.NoiseSocket.IgnoreHandshakeMessageAsync(System.Threading.CancellationToken)">IgnoreHandshakeMessageAsync(CancellationToken)</h4>
@@ -543,7 +545,7 @@ the input stream without attempting to decrypt it.</p>
     <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_ReadHandshakeMessageAsync_System_Threading_CancellationToken_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.ReadHandshakeMessageAsync(System.Threading.CancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
   </span>
   <span class="small pull-right mobile-hide">
-    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L495">View Source</a>
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L517">View Source</a>
   </span>
   <a id="Noise_NoiseSocket_ReadHandshakeMessageAsync_" data-uid="Noise.NoiseSocket.ReadHandshakeMessageAsync*"></a>
   <h4 id="Noise_NoiseSocket_ReadHandshakeMessageAsync_System_Threading_CancellationToken_" data-uid="Noise.NoiseSocket.ReadHandshakeMessageAsync(System.Threading.CancellationToken)">ReadHandshakeMessageAsync(CancellationToken)</h4>
@@ -639,7 +641,7 @@ method can throw. See the <span class="xref">Noise.Protocol</span> class documen
     <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_ReadMessageAsync_System_Threading_CancellationToken_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.ReadMessageAsync(System.Threading.CancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
   </span>
   <span class="small pull-right mobile-hide">
-    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L644">View Source</a>
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L666">View Source</a>
   </span>
   <a id="Noise_NoiseSocket_ReadMessageAsync_" data-uid="Noise.NoiseSocket.ReadMessageAsync*"></a>
   <h4 id="Noise_NoiseSocket_ReadMessageAsync_System_Threading_CancellationToken_" data-uid="Noise.NoiseSocket.ReadMessageAsync(System.Threading.CancellationToken)">ReadMessageAsync(CancellationToken)</h4>
@@ -732,7 +734,7 @@ initiator has attempted to read a message from a one-way stream.</p>
     <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_ReadNegotiationDataAsync_System_Threading_CancellationToken_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.ReadNegotiationDataAsync(System.Threading.CancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
   </span>
   <span class="small pull-right mobile-hide">
-    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L454">View Source</a>
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L476">View Source</a>
   </span>
   <a id="Noise_NoiseSocket_ReadNegotiationDataAsync_" data-uid="Noise.NoiseSocket.ReadNegotiationDataAsync*"></a>
   <h4 id="Noise_NoiseSocket_ReadNegotiationDataAsync_System_Threading_CancellationToken_" data-uid="Noise.NoiseSocket.ReadNegotiationDataAsync(System.Threading.CancellationToken)">ReadNegotiationDataAsync(CancellationToken)</h4>
@@ -814,7 +816,7 @@ The result of the task contains the negotiation data.</p>
     <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_Retry_Noise_Protocol_Noise_ProtocolConfig_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.Retry(Noise.Protocol%2CNoise.ProtocolConfig)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
   </span>
   <span class="small pull-right mobile-hide">
-    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L246">View Source</a>
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L263">View Source</a>
   </span>
   <a id="Noise_NoiseSocket_Retry_" data-uid="Noise.NoiseSocket.Retry*"></a>
   <h4 id="Noise_NoiseSocket_Retry_Noise_Protocol_Noise_ProtocolConfig_" data-uid="Noise.NoiseSocket.Retry(Noise.Protocol,Noise.ProtocolConfig)">Retry(Protocol, ProtocolConfig)</h4>
@@ -883,7 +885,8 @@ or the protocol has already been changed once.</p>
       <tr>
         <td><span class="xref">System.ArgumentException</span></td>
         <td><p>Thrown if the client attempted to retry with a new protocol as a responder,
-or the server attempted to retry with a new protocol as an initiator.</p>
+the server attempted to retry with a new protocol as an initiator,
+or the selected handshake pattern was a one-way pattern.</p>
 </td>
       </tr>
     </tbody>
@@ -893,7 +896,7 @@ or the server attempted to retry with a new protocol as an initiator.</p>
     <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_Switch_Noise_Protocol_Noise_ProtocolConfig_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.Switch(Noise.Protocol%2CNoise.ProtocolConfig)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
   </span>
   <span class="small pull-right mobile-hide">
-    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L200">View Source</a>
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L216">View Source</a>
   </span>
   <a id="Noise_NoiseSocket_Switch_" data-uid="Noise.NoiseSocket.Switch*"></a>
   <h4 id="Noise_NoiseSocket_Switch_Noise_Protocol_Noise_ProtocolConfig_" data-uid="Noise.NoiseSocket.Switch(Noise.Protocol,Noise.ProtocolConfig)">Switch(Protocol, ProtocolConfig)</h4>
@@ -962,7 +965,8 @@ or the protocol has already been changed once.</p>
       <tr>
         <td><span class="xref">System.ArgumentException</span></td>
         <td><p>Thrown if the client attempted to switch to a new protocol as an initiator,
-or the server attempted to switch to a new protocol as a responder.</p>
+the server attempted to switch to a new protocol as a responder,
+or the selected handshake pattern was a one-way pattern.</p>
 </td>
       </tr>
     </tbody>
@@ -972,7 +976,7 @@ or the server attempted to switch to a new protocol as a responder.</p>
     <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_WriteEmptyHandshakeMessageAsync_System_Memory_System_Byte__System_Threading_CancellationToken_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.WriteEmptyHandshakeMessageAsync(System.Memory%7BSystem.Byte%7D%2CSystem.Threading.CancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
   </span>
   <span class="small pull-right mobile-hide">
-    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L414">View Source</a>
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L436">View Source</a>
   </span>
   <a id="Noise_NoiseSocket_WriteEmptyHandshakeMessageAsync_" data-uid="Noise.NoiseSocket.WriteEmptyHandshakeMessageAsync*"></a>
   <h4 id="Noise_NoiseSocket_WriteEmptyHandshakeMessageAsync_System_Memory_System_Byte__System_Threading_CancellationToken_" data-uid="Noise.NoiseSocket.WriteEmptyHandshakeMessageAsync(System.Memory{System.Byte},System.Threading.CancellationToken)">WriteEmptyHandshakeMessageAsync(Memory&lt;Byte&gt;, CancellationToken)</h4>
@@ -982,7 +986,7 @@ Called by the server when rejecting the initial protocol, or requesting a retry 
   <div class="markdown level1 conceptual"></div>
   <h5 class="decalaration">Declaration</h5>
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public Task WriteEmptyHandshakeMessageAsync(Memory&lt;byte&gt; negotiationData, CancellationToken cancellationToken = default(CancellationToken))</code></pre>
+    <pre><code class="lang-csharp hljs">public Task WriteEmptyHandshakeMessageAsync(Memory&lt;byte&gt; negotiationData = default(Memory&lt;byte&gt;), CancellationToken cancellationToken = default(CancellationToken))</code></pre>
   </div>
   <h5 class="parameters">Parameters</h5>
   <table class="table table-bordered table-striped table-condensed">
@@ -1066,7 +1070,7 @@ Called by the server when rejecting the initial protocol, or requesting a retry 
     <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_WriteHandshakeMessageAsync_System_Memory_System_Byte__System_Memory_System_Byte__System_UInt16_System_Threading_CancellationToken_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.WriteHandshakeMessageAsync(System.Memory%7BSystem.Byte%7D%2CSystem.Memory%7BSystem.Byte%7D%2CSystem.UInt16%2CSystem.Threading.CancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
   </span>
   <span class="small pull-right mobile-hide">
-    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L319">View Source</a>
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L341">View Source</a>
   </span>
   <a id="Noise_NoiseSocket_WriteHandshakeMessageAsync_" data-uid="Noise.NoiseSocket.WriteHandshakeMessageAsync*"></a>
   <h4 id="Noise_NoiseSocket_WriteHandshakeMessageAsync_System_Memory_System_Byte__System_Memory_System_Byte__System_UInt16_System_Threading_CancellationToken_" data-uid="Noise.NoiseSocket.WriteHandshakeMessageAsync(System.Memory{System.Byte},System.Memory{System.Byte},System.UInt16,System.Threading.CancellationToken)">WriteHandshakeMessageAsync(Memory&lt;Byte&gt;, Memory&lt;Byte&gt;, UInt16, CancellationToken)</h4>
@@ -1178,7 +1182,7 @@ than <span class="xref">Noise.Protocol.MaxMessageLength</span> bytes in length.<
     <a href="https://github.com/Metalnem/noisesocket/new/master/apiSpec/new?filename=Noise_NoiseSocket_WriteMessageAsync_System_Memory_System_Byte__System_UInt16_System_Threading_CancellationToken_.md&amp;value=---%0Auid%3A%20Noise.NoiseSocket.WriteMessageAsync(System.Memory%7BSystem.Byte%7D%2CSystem.UInt16%2CSystem.Threading.CancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
   </span>
   <span class="small pull-right mobile-hide">
-    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L589">View Source</a>
+    <a href="https://github.com/Metalnem/noisesocket/blob/master/NoiseSocket/NoiseSocket.cs/#L611">View Source</a>
   </span>
   <a id="Noise_NoiseSocket_WriteMessageAsync_" data-uid="Noise.NoiseSocket.WriteMessageAsync*"></a>
   <h4 id="Noise_NoiseSocket_WriteMessageAsync_System_Memory_System_Byte__System_UInt16_System_Threading_CancellationToken_" data-uid="Noise.NoiseSocket.WriteMessageAsync(System.Memory{System.Byte},System.UInt16,System.Threading.CancellationToken)">WriteMessageAsync(Memory&lt;Byte&gt;, UInt16, CancellationToken)</h4>
