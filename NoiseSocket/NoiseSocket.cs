@@ -45,6 +45,11 @@ namespace Noise
 
 		private NoiseSocket(bool client, Protocol protocol, ProtocolConfig config, Stream stream, bool leaveOpen = false)
 		{
+			if (protocol != null && protocol.HandshakePattern.Patterns.Count() == 1)
+			{
+				throw new ArgumentException("One-way patterns are not yet supported.");
+			}
+
 			this.client = client;
 			this.protocol = protocol;
 			this.config = config;
@@ -98,7 +103,8 @@ namespace Noise
 		/// <paramref name="config"/>, or <paramref name="stream"/> is null.
 		/// </exception>
 		/// <exception cref="ArgumentException">
-		/// Thrown if the client was initialized as a Noise protocol responder.
+		/// Thrown if the client was initialized as a Noise protocol responder
+		/// or the selected handshake pattern was a one-way pattern.
 		/// </exception>
 		public static NoiseSocket CreateClient(Protocol protocol, ProtocolConfig config, Stream stream, bool leaveOpen = false)
 		{
@@ -153,7 +159,8 @@ namespace Noise
 		/// Thrown if either <paramref name="protocol"/> or <paramref name="config"/> is null.
 		/// </exception>
 		/// <exception cref="ArgumentException">
-		/// Thrown if the server attempted to accept a new protocol as an initiator.
+		/// Thrown if the server attempted to accept a new protocol as an initiator
+		/// or the selected handshake pattern was a one-way pattern.
 		/// </exception>
 		/// <remarks>
 		/// This method can also throw all exceptions that <see cref="Protocol.Create(ProtocolConfig)"/>
@@ -199,7 +206,8 @@ namespace Noise
 		/// </exception>
 		/// <exception cref="ArgumentException">
 		/// Thrown if the client attempted to switch to a new protocol as an initiator,
-		/// or the server attempted to switch to a new protocol as a responder.
+		/// the server attempted to switch to a new protocol as a responder,
+		/// or the selected handshake pattern was a one-way pattern.
 		/// </exception>
 		/// <remarks>
 		/// This method can also throw all exceptions that <see cref="Protocol.Create(ProtocolConfig)"/>
@@ -245,7 +253,8 @@ namespace Noise
 		/// </exception>
 		/// <exception cref="ArgumentException">
 		/// Thrown if the client attempted to retry with a new protocol as a responder,
-		/// or the server attempted to retry with a new protocol as an initiator.
+		/// the server attempted to retry with a new protocol as an initiator,
+		/// or the selected handshake pattern was a one-way pattern.
 		/// </exception>
 		/// <remarks>
 		/// This method can also throw all exceptions that <see cref="Protocol.Create(ProtocolConfig)"/>
@@ -272,6 +281,11 @@ namespace Noise
 
 		private void Reinitialize(Protocol protocol, ProtocolConfig config, State state)
 		{
+			if (protocol.HandshakePattern.Patterns.Count() == 1)
+			{
+				throw new ArgumentException("One-way patterns are not yet supported.");
+			}
+
 			if (transport != null)
 			{
 				throw new InvalidOperationException($"Cannot change protocol after the handshake has been completed.");
