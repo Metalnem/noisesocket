@@ -5,15 +5,18 @@ namespace Noise.Tests
 	internal sealed class Message
 	{
 		[JsonProperty("negotiation_data")]
-		public string NegotiationData;
+		[JsonConverter(typeof(ByteArrayConverter))]
+		public byte[] NegotiationData;
 
 		[JsonProperty("message_body")]
-		public string MessageBody;
+		[JsonConverter(typeof(ByteArrayConverter))]
+		public byte[] MessageBody;
 
 		[JsonProperty("padded_length")]
-		public int PaddedLength;
+		public ushort PaddedLength;
 
 		[JsonProperty("message")]
-		public string Value;
+		[JsonConverter(typeof(ByteArrayConverter))]
+		public byte[] Value;
 	}
 }

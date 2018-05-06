@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -45,19 +46,19 @@ namespace Noise.Tests
 					initSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, initEphemeral));
 					respSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, respEphemeral));
 
-					foreach (var message in vector["messages"])
+					foreach (var message in ReadMessages(vector["messages"]))
 					{
 						stream.Position = 0;
 
-						var negotiationData = GetBytes(message, "negotiation_data");
-						var messageBody = GetBytes(message, "message_body");
-						var paddedLength = (ushort?)message["padded_length"] ?? 0;
-						var value = GetBytes(message, "message");
+						var negotiationData = message.NegotiationData ?? new byte[0];
+						var messageBody = message.MessageBody;
+						var paddedLength = message.PaddedLength;
+						var value = message.Value;
 
 						if (initSocket.HandshakeHash.IsEmpty)
 						{
 							await initSocket.WriteHandshakeMessageAsync(negotiationData, messageBody, paddedLength);
-							var initMessage = Utilities.ReadMessageRaw(stream);
+							var initMessage = Utilities.ReadMessage(stream);
 							Assert.Equal(value, initMessage);
 
 							stream.Position = 0;
@@ -76,7 +77,7 @@ namespace Noise.Tests
 						else
 						{
 							await initSocket.WriteMessageAsync(messageBody, paddedLength);
-							var initMessage = Utilities.ReadMessageRaw(stream);
+							var initMessage = Utilities.ReadMessage(stream);
 							Assert.Equal(value, initMessage);
 
 							stream.Position = 0;
@@ -104,6 +105,18 @@ namespace Noise.Tests
 		private static byte[] GetBytes(JToken token, string property)
 		{
 			return Hex.Decode(GetString(token, property));
+		}
+
+		private static Queue<Message> ReadMessages(JToken messages)
+		{
+			var queue = new Queue<Message>();
+
+			foreach (var message in messages)
+			{
+				queue.Enqueue(message.ToObject<Message>());
+			}
+
+			return queue;
 		}
 	}
 }

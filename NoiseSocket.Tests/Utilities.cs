@@ -14,17 +14,12 @@ namespace Noise.Tests
 			setDh.Invoke(state, new object[] { new FixedKeyDh(ephemeral) });
 		}
 
-		public static byte[] ReadMessageRaw(MemoryStream stream)
+		public static byte[] ReadMessage(MemoryStream stream)
 		{
 			byte[] message = new byte[stream.Position];
 			Array.Copy(stream.GetBuffer(), 0, message, 0, message.Length);
 
 			return message;
-		}
-
-		public static string ReadMessageHex(MemoryStream stream)
-		{
-			return Hex.Encode(ReadMessageRaw(stream));
 		}
 
 		public static void Swap<T>(ref T x, ref T y)

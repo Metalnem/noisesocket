@@ -25,10 +25,10 @@ namespace Noise.Tests
 
 			var message = new Message
 			{
-				NegotiationData = negotiationData != null ? Hex.Encode(negotiationData) : null,
-				MessageBody = messageBody != null ? Hex.Encode(messageBody) : null,
-				PaddedLength = isNextMessageEncrypted ? paddedLength : 0,
-				Value = Utilities.ReadMessageHex(stream)
+				NegotiationData = negotiationData,
+				MessageBody = messageBody,
+				PaddedLength = isNextMessageEncrypted ? paddedLength : default(ushort),
+				Value = Utilities.ReadMessage(stream)
 			};
 
 			stream.Position = 0;
@@ -41,8 +41,8 @@ namespace Noise.Tests
 
 			var message = new Message
 			{
-				NegotiationData = negotiationData != null ? Hex.Encode(negotiationData) : null,
-				Value = Utilities.ReadMessageHex(stream)
+				NegotiationData = negotiationData,
+				Value = Utilities.ReadMessage(stream)
 			};
 
 			stream.Position = 0;
@@ -55,9 +55,9 @@ namespace Noise.Tests
 
 			var message = new Message
 			{
-				MessageBody = Hex.Encode(messageBody),
+				MessageBody = messageBody,
 				PaddedLength = paddedLength,
-				Value = Utilities.ReadMessageHex(stream)
+				Value = Utilities.ReadMessage(stream)
 			};
 
 			stream.Position = 0;
