@@ -1,14 +1,14 @@
 namespace Noise.Tests
 {
-	internal sealed class TestConfig
+	internal sealed class Test
 	{
 		public Protocol Protocol;
-		public byte[] NameBytes;
-		public string NameString;
+		public string Name;
 		public bool InitStaticRequired;
 		public bool InitRemoteStaticRequired;
 		public bool RespStaticRequired;
 		public bool RespRemoteStaticRequired;
 		public int PaddedLength;
+		public Response Response;
 	}
 }

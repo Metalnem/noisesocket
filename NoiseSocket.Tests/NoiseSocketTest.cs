@@ -19,15 +19,16 @@ namespace Noise.Tests
 			{
 				foreach (var vector in json["vectors"])
 				{
-					var protocolName = GetString(vector, "protocol_name");
+					var config = vector["initial"];
+					var protocolName = GetString(config, "protocol_name");
 					var initPrologue = GetBytes(vector, "init_prologue");
-					var initStatic = GetBytes(vector, "init_static");
-					var initEphemeral = GetBytes(vector, "init_ephemeral");
-					var initRemoteStatic = GetBytes(vector, "init_remote_static");
+					var initStatic = GetBytes(config, "init_static");
+					var initEphemeral = GetBytes(config, "init_ephemeral");
+					var initRemoteStatic = GetBytes(config, "init_remote_static");
 					var respPrologue = GetBytes(vector, "resp_prologue");
-					var respStatic = GetBytes(vector, "resp_static");
-					var respEphemeral = GetBytes(vector, "resp_ephemeral");
-					var respRemoteStatic = GetBytes(vector, "resp_remote_static");
+					var respStatic = GetBytes(config, "resp_static");
+					var respEphemeral = GetBytes(config, "resp_ephemeral");
+					var respRemoteStatic = GetBytes(config, "resp_remote_static");
 					var handshakeHash = GetBytes(vector, "handshake_hash");
 
 					var initConfig = new ProtocolConfig(true, initPrologue, initStatic, initRemoteStatic);

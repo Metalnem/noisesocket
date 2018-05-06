@@ -50,33 +50,33 @@ namespace Noise.Tests
 
 			using (var stream = new MemoryStream())
 			{
-				foreach (var config in GetTestConfigs())
+				foreach (var test in GetTests())
 				{
 					var initConfig = new ProtocolConfig(
 						initiator: true,
 						prologue: PrologueRaw,
-						s: config.InitStaticRequired ? InitStaticRaw : null,
-						rs: config.InitRemoteStaticRequired ? RespStaticPublicRaw : null
+						s: test.InitStaticRequired ? InitStaticRaw : null,
+						rs: test.InitRemoteStaticRequired ? RespStaticPublicRaw : null
 					);
 
 					var respConfig = new ProtocolConfig(
 						initiator: false,
 						prologue: PrologueRaw,
-						s: config.RespStaticRequired ? RespStaticRaw : null,
-						rs: config.RespRemoteStaticRequired ? InitStaticPublicRaw : null
+						s: test.RespStaticRequired ? RespStaticRaw : null,
+						rs: test.RespRemoteStaticRequired ? InitStaticPublicRaw : null
 					);
 
-					var initSocket = NoiseSocket.CreateClient(config.Protocol, initConfig, stream, true);
+					var initSocket = NoiseSocket.CreateClient(test.Protocol, initConfig, stream, true);
 					var respSocket = NoiseSocket.CreateServer(stream, true);
 
 					initSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, InitEphemeralRaw.ToArray()));
 					respSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, RespEphemeralRaw.ToArray()));
 
 					var messages = new List<Message>();
-					var paddedLength = (ushort)config.PaddedLength;
+					var paddedLength = (ushort)test.PaddedLength;
 
 					bool hasData = true;
-					bool isOneWay = config.Protocol.HandshakePattern.Patterns.Count() == 1;
+					bool isOneWay = test.Protocol.HandshakePattern.Patterns.Count() == 1;
 
 					for (int i = 0; i < messagesHex.Count; ++i)
 					{
@@ -104,7 +104,7 @@ namespace Noise.Tests
 
 							if (i == 0)
 							{
-								respSocket.Accept(config.Protocol, respConfig);
+								respSocket.Accept(test.Protocol, respConfig);
 							}
 
 							await respSocket.ReadHandshakeMessageAsync();
@@ -138,17 +138,24 @@ namespace Noise.Tests
 						}
 					}
 
+					var initial = new Config
+					{
+						ProtocolName = test.Name,
+						InitStatic = test.InitStaticRequired ? InitStaticHex : null,
+						InitEphemeral = InitEphemeralHex,
+						InitRemoteStatic = test.InitRemoteStaticRequired ? RespStaticPublicHex : null,
+						RespStatic = test.RespStaticRequired ? RespStaticHex : null,
+						RespEphemeral = RespEphemeralHex,
+						RespRemoteStatic = test.RespRemoteStaticRequired ? InitStaticPublicHex : null
+					};
+
 					var vector = new Vector
 					{
-						ProtocolName = config.NameString,
+						Initial = initial,
+						Switch = test.Response == Response.Switch ? initial : null,
+						Retry = test.Response == Response.Retry ? initial : null,
 						InitPrologue = PrologueHex,
-						InitStatic = config.InitStaticRequired ? InitStaticHex : null,
-						InitEphemeral = InitEphemeralHex,
-						InitRemoteStatic = config.InitRemoteStaticRequired ? RespStaticPublicHex : null,
 						RespPrologue = PrologueHex,
-						RespStatic = config.RespStaticRequired ? RespStaticHex : null,
-						RespEphemeral = RespEphemeralHex,
-						RespRemoteStatic = config.RespRemoteStaticRequired ? InitStaticPublicHex : null,
 						HandshakeHash = Hex.Encode(initSocket.HandshakeHash.ToArray()),
 						Messages = messages
 					};
@@ -214,7 +221,15 @@ namespace Noise.Tests
 			}
 		}
 
-		private static IEnumerable<TestConfig> GetTestConfigs()
+		private static IEnumerable<Response> Responses
+		{
+			get
+			{
+				yield return Response.Accept;
+			}
+		}
+
+		private static IEnumerable<Test> GetTests()
 		{
 			foreach (var pattern in Patterns)
 			{
@@ -233,17 +248,20 @@ namespace Noise.Tests
 
 						foreach (var paddedLength in PaddedLengths)
 						{
-							yield return new TestConfig
+							foreach (var response in Responses)
 							{
-								Protocol = protocol,
-								NameBytes = protocol.Name,
-								NameString = name,
-								InitStaticRequired = initStaticRequired,
-								InitRemoteStaticRequired = initRemoteStaticRequired,
-								RespStaticRequired = respStaticRequired,
-								RespRemoteStaticRequired = respRemoteStaticRequired,
-								PaddedLength = paddedLength
-							};
+								yield return new Test
+								{
+									Protocol = protocol,
+									Name = name,
+									InitStaticRequired = initStaticRequired,
+									InitRemoteStaticRequired = initRemoteStaticRequired,
+									RespStaticRequired = respStaticRequired,
+									RespRemoteStaticRequired = respRemoteStaticRequired,
+									PaddedLength = paddedLength,
+									Response = response
+								};
+							}
 						}
 					}
 				}
