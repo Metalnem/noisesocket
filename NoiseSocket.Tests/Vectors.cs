@@ -89,6 +89,26 @@ namespace Noise.Tests
 
 						Utilities.Swap(ref writer, ref reader);
 					}
+					else if (test.Response == Response.Switch)
+					{
+						await proxy.WriteHandshakeMessageAsync(alice, InitialNegotiationData, queue.Dequeue());
+						await bob.ReadNegotiationDataAsync();
+
+						bob.Switch(test.Protocol, aliceConfig);
+						bob.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, AliceEphemeralRaw.ToArray()));
+
+						await bob.IgnoreHandshakeMessageAsync();
+						stream.Position = 0;
+
+						await proxy.WriteHandshakeMessageAsync(bob, SwitchNegotiationData, queue.Dequeue());
+						await alice.ReadNegotiationDataAsync();
+
+						alice.Switch(test.Protocol, bobConfig);
+						alice.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, BobEphemeralRaw.ToArray()));
+
+						await alice.ReadHandshakeMessageAsync();
+						stream.Position = 0;
+					}
 					else if (test.Response == Response.Retry)
 					{
 						await proxy.WriteHandshakeMessageAsync(alice, InitialNegotiationData, queue.Dequeue());
@@ -123,30 +143,41 @@ namespace Noise.Tests
 						Utilities.Swap(ref writer, ref reader);
 					}
 
-					var initial = new Config
+					var initialConfig = new Config
 					{
 						ProtocolName = test.Name,
-						AliceStatic = test.InitStaticRequired ? AliceStaticRaw : null,
+						AliceStatic = aliceConfig.LocalStatic,
 						AliceEphemeral = AliceEphemeralRaw,
-						AliceRemoteStatic = test.InitRemoteStaticRequired ? BobStaticPublicRaw : null,
-						BobStatic = test.RespStaticRequired ? BobStaticRaw : null,
+						AliceRemoteStatic = aliceConfig.RemoteStatic,
+						BobStatic = bobConfig.LocalStatic,
 						BobEphemeral = BobEphemeralRaw,
-						BobRemoteStatic = test.RespRemoteStaticRequired ? AliceStaticPublicRaw : null
+						BobRemoteStatic = bobConfig.RemoteStatic
+					};
+
+					var switchConfig = new Config
+					{
+						ProtocolName = test.Name,
+						AliceStatic = bobConfig.LocalStatic,
+						AliceEphemeral = BobEphemeralRaw,
+						AliceRemoteStatic = bobConfig.RemoteStatic,
+						BobStatic = aliceConfig.LocalStatic,
+						BobEphemeral = AliceEphemeralRaw,
+						BobRemoteStatic = aliceConfig.RemoteStatic
 					};
 
 					var vector = new Vector
 					{
-						Initial = initial,
-						Switch = test.Response == Response.Switch ? initial : null,
-						Retry = test.Response == Response.Retry ? initial : null,
+						Initial = initialConfig,
+						Switch = test.Response == Response.Switch ? switchConfig : null,
+						Retry = test.Response == Response.Retry ? initialConfig : null,
 						AlicePrologue = PrologueHex,
 						BobPrologue = PrologueHex,
 						HandshakeHash = Hex.Encode(writer.HandshakeHash.ToArray()),
 						Messages = proxy.Messages
 					};
 
-					writer.Dispose();
-					reader.Dispose();
+					alice.Dispose();
+					bob.Dispose();
 
 					vectors.Add(vector);
 				}
@@ -208,6 +239,7 @@ namespace Noise.Tests
 			get
 			{
 				yield return Response.Accept;
+				yield return Response.Switch;
 				yield return Response.Retry;
 			}
 		}

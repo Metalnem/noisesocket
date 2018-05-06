@@ -40,8 +40,11 @@ namespace Noise.Tests
 					var alice = NoiseSocket.CreateClient(protocol, aliceConfig, stream, true);
 					var bob = NoiseSocket.CreateServer(stream, true);
 
-					alice.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, config.AliceEphemeral.ToArray()));
-					bob.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, config.BobEphemeral.ToArray()));
+					var aliceEphemeral = config.AliceEphemeral;
+					var bobEphemeral = config.BobEphemeral;
+
+					alice.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, aliceEphemeral));
+					bob.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, bobEphemeral));
 
 					var writer = alice;
 					var reader = bob;
@@ -62,6 +65,40 @@ namespace Noise.Tests
 
 						Utilities.Swap(ref writer, ref reader);
 					}
+					else if (switchConfig != null)
+					{
+						config = switchConfig.ToObject<Config>();
+						protocol = Protocol.Parse(config.ProtocolName.AsSpan());
+
+						aliceConfig = new ProtocolConfig(false, alicePrologue, config.AliceStatic, config.AliceRemoteStatic);
+						bobConfig = new ProtocolConfig(true, bobPrologue, config.BobStatic, config.BobRemoteStatic);
+
+						var message = queue.Dequeue();
+						stream.Position = 0;
+
+						await alice.WriteHandshakeMessageAsync(message.NegotiationData, message.MessageBody, message.PaddedLength);
+						Assert.Equal(message.Value, Utilities.ReadMessage(stream));
+
+						stream.Position = 0;
+						Assert.Equal(message.NegotiationData ?? empty, await bob.ReadNegotiationDataAsync());
+
+						bob.Switch(protocol, bobConfig);
+						bob.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, config.BobEphemeral));
+						await bob.IgnoreHandshakeMessageAsync();
+
+						message = queue.Dequeue();
+						stream.Position = 0;
+
+						await bob.WriteHandshakeMessageAsync(message.NegotiationData, message.MessageBody, message.PaddedLength);
+						Assert.Equal(message.Value, Utilities.ReadMessage(stream));
+
+						stream.Position = 0;
+						Assert.Equal(message.NegotiationData ?? empty, await alice.ReadNegotiationDataAsync());
+
+						alice.Switch(protocol, aliceConfig);
+						alice.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, config.AliceEphemeral));
+						Assert.Equal(message.MessageBody, await alice.ReadHandshakeMessageAsync());
+					}
 					else if (retryConfig != null)
 					{
 						config = retryConfig.ToObject<Config>();
@@ -80,6 +117,7 @@ namespace Noise.Tests
 						Assert.Equal(message.NegotiationData ?? empty, await bob.ReadNegotiationDataAsync());
 
 						bob.Retry(protocol, bobConfig);
+						bob.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, config.BobEphemeral));
 						await bob.IgnoreHandshakeMessageAsync();
 
 						message = queue.Dequeue();
@@ -92,6 +130,7 @@ namespace Noise.Tests
 						Assert.Equal(message.NegotiationData ?? empty, await alice.ReadNegotiationDataAsync());
 
 						alice.Retry(protocol, aliceConfig);
+						alice.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, config.AliceEphemeral));
 						await alice.IgnoreHandshakeMessageAsync();
 					}
 
@@ -125,8 +164,8 @@ namespace Noise.Tests
 					Assert.Equal(handshakeHash, writer.HandshakeHash.ToArray());
 					Assert.Equal(handshakeHash, reader.HandshakeHash.ToArray());
 
-					writer.Dispose();
-					reader.Dispose();
+					alice.Dispose();
+					bob.Dispose();
 				}
 			}
 		}
