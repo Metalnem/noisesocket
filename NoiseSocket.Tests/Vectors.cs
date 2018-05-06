@@ -72,12 +72,10 @@ namespace Noise.Tests
 					initSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, InitEphemeralRaw.ToArray()));
 					respSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, RespEphemeralRaw.ToArray()));
 
-					var messages = new List<Message>();
-					var paddedLength = (ushort)test.PaddedLength;
-
 					bool hasData = true;
 					bool isOneWay = test.Protocol.HandshakePattern.Patterns.Count() == 1;
 
+					var proxy = new SocketProxy(stream, (ushort)test.PaddedLength);
 					var writer = initSocket;
 					var reader = respSocket;
 
@@ -86,12 +84,9 @@ namespace Noise.Tests
 						if (writer.HandshakeHash.IsEmpty)
 						{
 							var negotiationData = hasData ? InitialNegotiationData : null;
-							var message = await WriteHandshakeMessageAsync(writer, stream, negotiationData, payloads[i], paddedLength);
-
-							messages.Add(message);
+							await proxy.WriteHandshakeMessageAsync(writer, negotiationData, payloads[i]);
 							hasData = false;
 
-							stream.Position = 0;
 							await reader.ReadNegotiationDataAsync();
 
 							if (i == 0)
@@ -100,15 +95,16 @@ namespace Noise.Tests
 							}
 
 							await reader.ReadHandshakeMessageAsync();
+							stream.Position = 0;
 
 							if (isOneWay)
 							{
-								messages.Add(await WriteEmptyHandshakeMessageAsync(reader, stream));
+								await proxy.WriteEmptyHandshakeMessageAsync(reader);
 							}
 						}
 						else
 						{
-							messages.Add(await WriteMessageAsync(writer, stream, payloads[i], paddedLength));
+							await proxy.WriteMessageAsync(writer, payloads[i]);
 						}
 
 						if (!isOneWay)
@@ -138,7 +134,7 @@ namespace Noise.Tests
 						InitPrologue = PrologueHex,
 						RespPrologue = PrologueHex,
 						HandshakeHash = Hex.Encode(writer.HandshakeHash.ToArray()),
-						Messages = messages
+						Messages = proxy.Messages
 					};
 
 					writer.Dispose();
@@ -149,54 +145,6 @@ namespace Noise.Tests
 			}
 
 			return vectors;
-		}
-
-		private static async Task<Message> WriteHandshakeMessageAsync(
-			NoiseSocket socket,
-			MemoryStream stream,
-			byte[] negotiationData,
-			byte[] messageBody,
-			ushort paddedLength)
-		{
-			stream.Position = 0;
-			bool isNextMessageEncrypted = socket.IsNextMessageEncrypted;
-			await socket.WriteHandshakeMessageAsync(negotiationData, messageBody, paddedLength);
-
-			return new Message
-			{
-				NegotiationData = negotiationData != null ? Hex.Encode(negotiationData) : null,
-				MessageBody = messageBody != null ? Hex.Encode(messageBody) : null,
-				PaddedLength = isNextMessageEncrypted ? paddedLength : 0,
-				Value = Utilities.ReadMessageHex(stream)
-			};
-		}
-
-		private static async Task<Message> WriteEmptyHandshakeMessageAsync(NoiseSocket socket, MemoryStream stream)
-		{
-			stream.Position = 0;
-			await socket.WriteEmptyHandshakeMessageAsync();
-
-			return new Message
-			{
-				Value = Utilities.ReadMessageHex(stream)
-			};
-		}
-
-		private static async Task<Message> WriteMessageAsync(
-			NoiseSocket socket,
-			MemoryStream stream,
-			byte[] messageBody,
-			ushort paddedLength)
-		{
-			stream.Position = 0;
-			await socket.WriteMessageAsync(messageBody, paddedLength);
-
-			return new Message
-			{
-				MessageBody = Hex.Encode(messageBody),
-				PaddedLength = paddedLength,
-				Value = Utilities.ReadMessageHex(stream)
-			};
 		}
 
 		private static IEnumerable<HandshakePattern> Patterns
