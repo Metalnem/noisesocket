@@ -83,10 +83,27 @@ namespace Noise.Tests
 						await proxy.WriteHandshakeMessageAsync(initSocket, InitialNegotiationData, queue.Dequeue());
 						await respSocket.ReadNegotiationDataAsync();
 						respSocket.Accept(test.Protocol, respConfig);
-						await respSocket.ReadHandshakeMessageAsync();
 
+						await respSocket.ReadHandshakeMessageAsync();
 						stream.Position = 0;
+
 						Utilities.Swap(ref writer, ref reader);
+					}
+					else if (test.Response == Response.Retry)
+					{
+						await proxy.WriteHandshakeMessageAsync(initSocket, InitialNegotiationData, queue.Dequeue());
+						await respSocket.ReadNegotiationDataAsync();
+						respSocket.Retry(test.Protocol, respConfig);
+
+						await respSocket.IgnoreHandshakeMessageAsync();
+						stream.Position = 0;
+
+						await proxy.WriteEmptyHandshakeMessageAsync(respSocket, RetryNegotiationData);
+						await initSocket.ReadNegotiationDataAsync();
+						initSocket.Retry(test.Protocol, initConfig);
+
+						await initSocket.IgnoreHandshakeMessageAsync();
+						stream.Position = 0;
 					}
 
 					while (queue.Count > 0)
@@ -191,6 +208,7 @@ namespace Noise.Tests
 			get
 			{
 				yield return Response.Accept;
+				yield return Response.Retry;
 			}
 		}
 
