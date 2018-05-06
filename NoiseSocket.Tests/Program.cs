@@ -15,7 +15,7 @@ namespace Noise.Tests
 			using (var writer = new StreamWriter(file))
 			using (var json = new JsonTextWriter(writer) { Formatting = Formatting.Indented, Indentation = 0 })
 			{
-				var serializer = new JsonSerializer { NullValueHandling = NullValueHandling.Ignore };
+				var serializer = new JsonSerializer { DefaultValueHandling = DefaultValueHandling.Ignore };
 
 				var vectors = new Dictionary<string, object>
 				{

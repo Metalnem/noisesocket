@@ -92,7 +92,7 @@ namespace Noise.Tests
 							{
 								NegotiationData = hasData ? NegotiationDataHex : null,
 								MessageBody = messagesHex[i],
-								PaddedLength = isNextMessageEncrypted && paddedLength > 0 ? paddedLength : (int?)null,
+								PaddedLength = isNextMessageEncrypted ? paddedLength : 0,
 								Value = Utilities.ReadMessageHex(stream)
 							};
 
@@ -123,7 +123,7 @@ namespace Noise.Tests
 							var message = new Message
 							{
 								MessageBody = messagesHex[i],
-								PaddedLength = paddedLength > 0 ? paddedLength : (int?)null,
+								PaddedLength = paddedLength,
 								Value = Utilities.ReadMessageHex(stream)
 							};
 
