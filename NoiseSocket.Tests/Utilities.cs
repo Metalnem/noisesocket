@@ -26,5 +26,12 @@ namespace Noise.Tests
 		{
 			return Hex.Encode(ReadMessageRaw(stream));
 		}
+
+		public static void Swap<T>(ref T x, ref T y)
+		{
+			var temp = x;
+			x = y;
+			y = temp;
+		}
 	}
 }

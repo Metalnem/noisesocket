@@ -72,47 +72,38 @@ namespace Noise.Tests
 					initSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, InitEphemeralRaw.ToArray()));
 					respSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, RespEphemeralRaw.ToArray()));
 
-					bool hasData = true;
-					bool isOneWay = test.Protocol.HandshakePattern.Patterns.Count() == 1;
-
 					var proxy = new SocketProxy(stream, (ushort)test.PaddedLength);
+					var queue = new Queue<byte[]>(payloads);
+
 					var writer = initSocket;
 					var reader = respSocket;
 
-					for (int i = 0; i < payloads.Count; ++i)
+					if (test.Response == Response.Accept)
+					{
+						await proxy.WriteHandshakeMessageAsync(initSocket, InitialNegotiationData, queue.Dequeue());
+						await respSocket.ReadNegotiationDataAsync();
+						respSocket.Accept(test.Protocol, respConfig);
+						await respSocket.ReadHandshakeMessageAsync();
+
+						stream.Position = 0;
+						Utilities.Swap(ref writer, ref reader);
+					}
+
+					while (queue.Count > 0)
 					{
 						if (writer.HandshakeHash.IsEmpty)
 						{
-							var negotiationData = hasData ? InitialNegotiationData : null;
-							await proxy.WriteHandshakeMessageAsync(writer, negotiationData, payloads[i]);
-							hasData = false;
-
+							await proxy.WriteHandshakeMessageAsync(writer, null, queue.Dequeue());
 							await reader.ReadNegotiationDataAsync();
-
-							if (i == 0)
-							{
-								reader.Accept(test.Protocol, respConfig);
-							}
-
 							await reader.ReadHandshakeMessageAsync();
 							stream.Position = 0;
-
-							if (isOneWay)
-							{
-								await proxy.WriteEmptyHandshakeMessageAsync(reader);
-							}
 						}
 						else
 						{
-							await proxy.WriteMessageAsync(writer, payloads[i]);
+							await proxy.WriteMessageAsync(writer, queue.Dequeue());
 						}
 
-						if (!isOneWay)
-						{
-							var temp = writer;
-							writer = reader;
-							reader = temp;
-						}
+						Utilities.Swap(ref writer, ref reader);
 					}
 
 					var initial = new Config
@@ -151,9 +142,6 @@ namespace Noise.Tests
 		{
 			get
 			{
-				yield return HandshakePattern.N;
-				yield return HandshakePattern.K;
-				yield return HandshakePattern.X;
 				yield return HandshakePattern.NN;
 				yield return HandshakePattern.NK;
 				yield return HandshakePattern.NX;

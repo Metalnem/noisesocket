@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -38,15 +37,13 @@ namespace Noise.Tests
 					var respConfig = new ProtocolConfig(false, respPrologue, respStatic, respRemoteStatic);
 
 					var protocol = Protocol.Parse(protocolName.AsSpan());
-					var isOneWay = protocol.HandshakePattern.Patterns.Count() == 1;
+					var accepted = false;
 
 					var initSocket = NoiseSocket.CreateClient(protocol, initConfig, stream, true);
 					var respSocket = NoiseSocket.CreateServer(stream, true);
 
 					initSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, initEphemeral));
 					respSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, respEphemeral));
-
-					int index = 0;
 
 					foreach (var message in vector["messages"])
 					{
@@ -67,19 +64,14 @@ namespace Noise.Tests
 							var respNegotiationData = await respSocket.ReadNegotiationDataAsync();
 							Assert.Equal(negotiationData, respNegotiationData);
 
-							if (index == 0)
+							if (!accepted)
 							{
 								respSocket.Accept(protocol, respConfig);
+								accepted = true;
 							}
 
 							var respMessageBody = await respSocket.ReadHandshakeMessageAsync();
 							Assert.Equal(messageBody, respMessageBody);
-						}
-						else if (isOneWay && index == 1)
-						{
-							await respSocket.WriteEmptyHandshakeMessageAsync();
-							var respMessage = Utilities.ReadMessageRaw(stream);
-							Assert.Equal(value, respMessage);
 						}
 						else
 						{
@@ -92,14 +84,7 @@ namespace Noise.Tests
 							Assert.Equal(messageBody, respMessageBody);
 						}
 
-						if (!isOneWay)
-						{
-							var temp = initSocket;
-							initSocket = respSocket;
-							respSocket = temp;
-						}
-
-						++index;
+						Utilities.Swap(ref initSocket, ref respSocket);
 					}
 
 					Assert.Equal(handshakeHash, initSocket.HandshakeHash.ToArray());

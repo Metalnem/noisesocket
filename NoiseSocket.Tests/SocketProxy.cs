@@ -35,12 +35,13 @@ namespace Noise.Tests
 			Messages.Add(message);
 		}
 
-		public async Task WriteEmptyHandshakeMessageAsync(NoiseSocket socket)
+		public async Task WriteEmptyHandshakeMessageAsync(NoiseSocket socket, byte[] negotiationData)
 		{
-			await socket.WriteEmptyHandshakeMessageAsync();
+			await socket.WriteEmptyHandshakeMessageAsync(negotiationData);
 
 			var message = new Message
 			{
+				NegotiationData = negotiationData != null ? Hex.Encode(negotiationData) : null,
 				Value = Utilities.ReadMessageHex(stream)
 			};
 
