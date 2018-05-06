@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -9,6 +10,8 @@ namespace Noise.Tests
 {
 	public class NoiseSocketTest
 	{
+		private static readonly byte[] empty = Array.Empty<byte>();
+
 		[Fact]
 		public async Task TestVectors()
 		{
@@ -23,76 +26,107 @@ namespace Noise.Tests
 					var switchConfig = vector["switch"];
 					var retryConfig = vector["retry"];
 
-					var protocolName = GetString(initialConfig, "protocol_name");
 					var initPrologue = GetBytes(vector, "init_prologue");
-					var initStatic = GetBytes(initialConfig, "init_static");
-					var initEphemeral = GetBytes(initialConfig, "init_ephemeral");
-					var initRemoteStatic = GetBytes(initialConfig, "init_remote_static");
 					var respPrologue = GetBytes(vector, "resp_prologue");
-					var respStatic = GetBytes(initialConfig, "resp_static");
-					var respEphemeral = GetBytes(initialConfig, "resp_ephemeral");
-					var respRemoteStatic = GetBytes(initialConfig, "resp_remote_static");
 					var handshakeHash = GetBytes(vector, "handshake_hash");
 
-					var initConfig = new ProtocolConfig(true, initPrologue, initStatic, initRemoteStatic);
-					var respConfig = new ProtocolConfig(false, respPrologue, respStatic, respRemoteStatic);
+					var config = vector["initial"].ToObject<Config>();
+					var initConfig = new ProtocolConfig(true, initPrologue, config.InitStatic, config.InitRemoteStatic);
+					var respConfig = new ProtocolConfig(false, respPrologue, config.RespStatic, config.RespRemoteStatic);
 
-					var protocol = Protocol.Parse(protocolName.AsSpan());
-					var accepted = false;
+					var protocol = Protocol.Parse(config.ProtocolName.AsSpan());
+					var queue = ReadMessages(vector["messages"]);
 
 					var initSocket = NoiseSocket.CreateClient(protocol, initConfig, stream, true);
 					var respSocket = NoiseSocket.CreateServer(stream, true);
 
-					initSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, initEphemeral));
-					respSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, respEphemeral));
+					initSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, config.InitEphemeral.ToArray()));
+					respSocket.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, config.RespEphemeral.ToArray()));
 
-					foreach (var message in ReadMessages(vector["messages"]))
+					var writer = initSocket;
+					var reader = respSocket;
+
+					if (switchConfig == null && retryConfig == null)
 					{
+						var message = queue.Dequeue();
 						stream.Position = 0;
 
-						var negotiationData = message.NegotiationData ?? new byte[0];
-						var messageBody = message.MessageBody;
-						var paddedLength = message.PaddedLength;
-						var value = message.Value;
+						await initSocket.WriteHandshakeMessageAsync(message.NegotiationData, message.MessageBody, message.PaddedLength);
+						Assert.Equal(message.Value, Utilities.ReadMessage(stream));
 
-						if (initSocket.HandshakeHash.IsEmpty)
+						stream.Position = 0;
+						Assert.Equal(message.NegotiationData ?? empty, await respSocket.ReadNegotiationDataAsync());
+
+						respSocket.Accept(protocol, respConfig);
+						Assert.Equal(message.MessageBody, await respSocket.ReadHandshakeMessageAsync());
+
+						Utilities.Swap(ref writer, ref reader);
+					}
+					else if (retryConfig != null)
+					{
+						config = retryConfig.ToObject<Config>();
+						protocol = Protocol.Parse(config.ProtocolName.AsSpan());
+
+						initConfig = new ProtocolConfig(true, initPrologue, config.InitStatic, config.InitRemoteStatic);
+						respConfig = new ProtocolConfig(false, respPrologue, config.RespStatic, config.RespRemoteStatic);
+
+						var message = queue.Dequeue();
+						stream.Position = 0;
+
+						await initSocket.WriteHandshakeMessageAsync(message.NegotiationData, message.MessageBody, message.PaddedLength);
+						Assert.Equal(message.Value, Utilities.ReadMessage(stream));
+
+						stream.Position = 0;
+						Assert.Equal(message.NegotiationData ?? empty, await respSocket.ReadNegotiationDataAsync());
+
+						respSocket.Retry(protocol, respConfig);
+						await respSocket.IgnoreHandshakeMessageAsync();
+
+						message = queue.Dequeue();
+						stream.Position = 0;
+
+						await respSocket.WriteEmptyHandshakeMessageAsync(message.NegotiationData);
+						Assert.Equal(message.Value, Utilities.ReadMessage(stream));
+
+						stream.Position = 0;
+						Assert.Equal(message.NegotiationData ?? empty, await initSocket.ReadNegotiationDataAsync());
+
+						initSocket.Retry(protocol, initConfig);
+						await initSocket.IgnoreHandshakeMessageAsync();
+					}
+
+					while (queue.Count > 0)
+					{
+						var message = queue.Dequeue();
+
+						if (writer.HandshakeHash.IsEmpty)
 						{
-							await initSocket.WriteHandshakeMessageAsync(negotiationData, messageBody, paddedLength);
-							var initMessage = Utilities.ReadMessage(stream);
-							Assert.Equal(value, initMessage);
+							stream.Position = 0;
+							await writer.WriteHandshakeMessageAsync(message.NegotiationData, message.MessageBody, message.PaddedLength);
+							Assert.Equal(message.Value, Utilities.ReadMessage(stream));
 
 							stream.Position = 0;
-							var respNegotiationData = await respSocket.ReadNegotiationDataAsync();
-							Assert.Equal(negotiationData, respNegotiationData);
-
-							if (!accepted)
-							{
-								respSocket.Accept(protocol, respConfig);
-								accepted = true;
-							}
-
-							var respMessageBody = await respSocket.ReadHandshakeMessageAsync();
-							Assert.Equal(messageBody, respMessageBody);
+							Assert.Equal(message.NegotiationData ?? empty, await reader.ReadNegotiationDataAsync());
+							Assert.Equal(message.MessageBody, await reader.ReadHandshakeMessageAsync());
 						}
 						else
 						{
-							await initSocket.WriteMessageAsync(messageBody, paddedLength);
-							var initMessage = Utilities.ReadMessage(stream);
-							Assert.Equal(value, initMessage);
+							stream.Position = 0;
+							await writer.WriteMessageAsync(message.MessageBody, message.PaddedLength);
+							Assert.Equal(message.Value, Utilities.ReadMessage(stream));
 
 							stream.Position = 0;
-							var respMessageBody = await respSocket.ReadMessageAsync();
-							Assert.Equal(messageBody, respMessageBody);
+							Assert.Equal(message.MessageBody, await reader.ReadMessageAsync());
 						}
 
-						Utilities.Swap(ref initSocket, ref respSocket);
+						Utilities.Swap(ref writer, ref reader);
 					}
 
-					Assert.Equal(handshakeHash, initSocket.HandshakeHash.ToArray());
-					Assert.Equal(handshakeHash, respSocket.HandshakeHash.ToArray());
+					Assert.Equal(handshakeHash, writer.HandshakeHash.ToArray());
+					Assert.Equal(handshakeHash, reader.HandshakeHash.ToArray());
 
-					initSocket.Dispose();
-					respSocket.Dispose();
+					writer.Dispose();
+					reader.Dispose();
 				}
 			}
 		}

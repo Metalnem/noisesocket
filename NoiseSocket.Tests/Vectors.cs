@@ -126,12 +126,12 @@ namespace Noise.Tests
 					var initial = new Config
 					{
 						ProtocolName = test.Name,
-						InitStatic = test.InitStaticRequired ? InitStaticHex : null,
-						InitEphemeral = InitEphemeralHex,
-						InitRemoteStatic = test.InitRemoteStaticRequired ? RespStaticPublicHex : null,
-						RespStatic = test.RespStaticRequired ? RespStaticHex : null,
-						RespEphemeral = RespEphemeralHex,
-						RespRemoteStatic = test.RespRemoteStaticRequired ? InitStaticPublicHex : null
+						InitStatic = test.InitStaticRequired ? InitStaticRaw : null,
+						InitEphemeral = InitEphemeralRaw,
+						InitRemoteStatic = test.InitRemoteStaticRequired ? RespStaticPublicRaw : null,
+						RespStatic = test.RespStaticRequired ? RespStaticRaw : null,
+						RespEphemeral = RespEphemeralRaw,
+						RespRemoteStatic = test.RespRemoteStaticRequired ? InitStaticPublicRaw : null
 					};
 
 					var vector = new Vector
