@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -29,26 +30,19 @@ namespace Noise.Tests
 		private const string RespEphemeralHex = "bbdb4cdbd309f1a1f2e1456967fe288cadd6f712d65dc7b7793d5e63da6b375b";
 		private static readonly byte[] RespEphemeralRaw = Hex.Decode(RespEphemeralHex);
 
-		private const string InitialNegotiationDataHex = "4e6f697365536f636b6574";
-		private static readonly byte[] InitialNegotiationDataRaw = Hex.Decode(InitialNegotiationDataHex);
+		private static readonly byte[] InitialNegotiationData = Hex.Decode("4e6f697365536f636b6574");
+		private static readonly byte[] SwitchNegotiationData = Hex.Decode("537769746368");
+		private static readonly byte[] RetryNegotiationData = Hex.Decode("5265747279");
 
-		private const string SwitchNegotiationDataHex = "537769746368";
-		private static readonly byte[] SwitchNegotiationDataRaw = Hex.Decode(SwitchNegotiationDataHex);
-
-		private const string RetryNegotiationDataHex = "5265747279";
-		private static readonly byte[] RetryNegotiationDataRaw = Hex.Decode(RetryNegotiationDataHex);
-
-		private static readonly List<string> messagesHex = new List<string>
+		private static readonly List<byte[]> payloads = new List<byte[]>
 		{
-			"4c756477696720766f6e204d69736573",
-			"4d757272617920526f746862617264",
-			"462e20412e20486179656b",
-			"4361726c204d656e676572",
-			"4a65616e2d426170746973746520536179",
-			"457567656e2042f6686d20766f6e2042617765726b"
+			Hex.Decode("4c756477696720766f6e204d69736573"),
+			Hex.Decode("4d757272617920526f746862617264"),
+			Hex.Decode("462e20412e20486179656b"),
+			Hex.Decode("4361726c204d656e676572"),
+			Hex.Decode("4a65616e2d426170746973746520536179"),
+			Hex.Decode("457567656e2042f6686d20766f6e2042617765726b")
 		};
-
-		private static readonly List<byte[]> messagesRaw = messagesHex.Select(Hex.Decode).ToList();
 
 		public static async Task<IEnumerable<Vector>> Generate()
 		{
@@ -87,23 +81,12 @@ namespace Noise.Tests
 					var writer = initSocket;
 					var reader = respSocket;
 
-					for (int i = 0; i < messagesHex.Count; ++i)
+					for (int i = 0; i < payloads.Count; ++i)
 					{
-						stream.Position = 0;
-
 						if (writer.HandshakeHash.IsEmpty)
 						{
-							var negotiationData = hasData ? InitialNegotiationDataRaw : null;
-							var isNextMessageEncrypted = writer.IsNextMessageEncrypted;
-							await writer.WriteHandshakeMessageAsync(negotiationData, messagesRaw[i], paddedLength);
-
-							var message = new Message
-							{
-								NegotiationData = hasData ? InitialNegotiationDataHex : null,
-								MessageBody = messagesHex[i],
-								PaddedLength = isNextMessageEncrypted ? paddedLength : 0,
-								Value = Utilities.ReadMessageHex(stream)
-							};
+							var negotiationData = hasData ? InitialNegotiationData : null;
+							var message = await WriteHandshakeMessageAsync(writer, stream, negotiationData, payloads[i], paddedLength);
 
 							messages.Add(message);
 							hasData = false;
@@ -120,23 +103,12 @@ namespace Noise.Tests
 
 							if (isOneWay)
 							{
-								stream.Position = 0;
-								await reader.WriteEmptyHandshakeMessageAsync();
-								messages.Add(new Message { Value = Utilities.ReadMessageHex(stream) });
+								messages.Add(await WriteEmptyHandshakeMessageAsync(reader, stream));
 							}
 						}
 						else
 						{
-							await writer.WriteMessageAsync(messagesRaw[i], paddedLength);
-
-							var message = new Message
-							{
-								MessageBody = messagesHex[i],
-								PaddedLength = paddedLength,
-								Value = Utilities.ReadMessageHex(stream)
-							};
-
-							messages.Add(message);
+							messages.Add(await WriteMessageAsync(writer, stream, payloads[i], paddedLength));
 						}
 
 						if (!isOneWay)
@@ -177,6 +149,54 @@ namespace Noise.Tests
 			}
 
 			return vectors;
+		}
+
+		private static async Task<Message> WriteHandshakeMessageAsync(
+			NoiseSocket socket,
+			MemoryStream stream,
+			byte[] negotiationData,
+			byte[] messageBody,
+			ushort paddedLength)
+		{
+			stream.Position = 0;
+			bool isNextMessageEncrypted = socket.IsNextMessageEncrypted;
+			await socket.WriteHandshakeMessageAsync(negotiationData, messageBody, paddedLength);
+
+			return new Message
+			{
+				NegotiationData = negotiationData != null ? Hex.Encode(negotiationData) : null,
+				MessageBody = messageBody != null ? Hex.Encode(messageBody) : null,
+				PaddedLength = isNextMessageEncrypted ? paddedLength : 0,
+				Value = Utilities.ReadMessageHex(stream)
+			};
+		}
+
+		private static async Task<Message> WriteEmptyHandshakeMessageAsync(NoiseSocket socket, MemoryStream stream)
+		{
+			stream.Position = 0;
+			await socket.WriteEmptyHandshakeMessageAsync();
+
+			return new Message
+			{
+				Value = Utilities.ReadMessageHex(stream)
+			};
+		}
+
+		private static async Task<Message> WriteMessageAsync(
+			NoiseSocket socket,
+			MemoryStream stream,
+			byte[] messageBody,
+			ushort paddedLength)
+		{
+			stream.Position = 0;
+			await socket.WriteMessageAsync(messageBody, paddedLength);
+
+			return new Message
+			{
+				MessageBody = Hex.Encode(messageBody),
+				PaddedLength = paddedLength,
+				Value = Utilities.ReadMessageHex(stream)
+			};
 		}
 
 		private static IEnumerable<HandshakePattern> Patterns
