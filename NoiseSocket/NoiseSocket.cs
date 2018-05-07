@@ -49,16 +49,61 @@ namespace Noise
 		private bool isNextMessageEncrypted;
 		private bool disposed;
 
-		private NoiseSocket(bool client, Protocol protocol, ProtocolConfig config, Stream stream, bool leaveOpen = false)
+		/// <summary>
+		/// Initializes a new instance of the <see cref="NoiseSocket"/> class.
+		/// </summary>
+		/// <param name="protocol">A concrete Noise protocol (e.g. Noise_XX_25519_AESGCM_BLAKE2b).</param>
+		/// <param name="config">
+		/// A set of parameters used to instantiate an initial <see cref="HandshakeState"/>.
+		/// </param>
+		/// <param name="stream">The stream for reading and writing encoded protocol messages.</param>
+		/// <param name="leaveOpen">
+		/// True to leave the stream open after the
+		/// <see cref="NoiseSocket"/> object is disposed, false otherwise.
+		/// </param>
+		/// <exception cref="ArgumentNullException">
+		/// Thrown if either <paramref name="protocol"/>,
+		/// <paramref name="config"/>, or <paramref name="stream"/> is null.
+		/// </exception>
+		/// <exception cref="ArgumentException">
+		/// Thrown if the selected handshake pattern was a one-way pattern.
+		/// </exception>
+		public NoiseSocket(Protocol protocol, ProtocolConfig config, Stream stream, bool leaveOpen = false)
 		{
-			if (protocol != null && protocol.HandshakePattern.Patterns.Count() == 1)
+			ThrowIfNull(protocol, nameof(protocol));
+			ThrowIfNull(config, nameof(config));
+			ThrowIfNull(stream, nameof(stream));
+
+			if (protocol.HandshakePattern.Patterns.Count() == 1)
 			{
 				throw new ArgumentException("One-way patterns are not yet supported.");
 			}
 
-			this.client = client;
+			this.client = config.Initiator;
 			this.protocol = protocol;
 			this.config = config;
+			this.stream = stream;
+			this.leaveOpen = leaveOpen;
+
+			savedMessages = new List<SavedMessage>();
+			isNextMessageEncrypted = protocol != null && IsInitialMessageEncrypted(protocol);
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="NoiseSocket"/> class.
+		/// </summary>
+		/// <param name="stream">The stream for reading and writing encoded protocol messages.</param>
+		/// <param name="leaveOpen">
+		/// True to leave the stream open after the
+		/// <see cref="NoiseSocket"/> object is disposed, false otherwise.
+		/// </param>
+		/// <exception cref="ArgumentNullException">
+		/// Thrown if <paramref name="stream"/> is null.
+		/// </exception>
+		public NoiseSocket(Stream stream, bool leaveOpen = false)
+		{
+			ThrowIfNull(stream, nameof(stream));
+
 			this.stream = stream;
 			this.leaveOpen = leaveOpen;
 
@@ -90,60 +135,6 @@ namespace Noise
 		/// message is not encrypted.
 		/// </summary>
 		internal bool IsNextMessageEncrypted => isNextMessageEncrypted;
-
-		/// <summary>
-		/// Initializes a new client instance of the <see cref="NoiseSocket"/> class.
-		/// </summary>
-		/// <param name="protocol">A concrete Noise protocol (e.g. Noise_XX_25519_AESGCM_BLAKE2b).</param>
-		/// <param name="config">
-		/// A set of parameters used to instantiate an initial <see cref="HandshakeState"/>.
-		/// </param>
-		/// <param name="stream">The stream for reading and writing encoded protocol messages.</param>
-		/// <param name="leaveOpen">
-		/// True to leave the stream open after the
-		/// <see cref="NoiseSocket"/> object is disposed, false otherwise.
-		/// </param>
-		/// <returns>The new <see cref="NoiseSocket"/> client.</returns>
-		/// <exception cref="ArgumentNullException">
-		/// Thrown if either <paramref name="protocol"/>,
-		/// <paramref name="config"/>, or <paramref name="stream"/> is null.
-		/// </exception>
-		/// <exception cref="ArgumentException">
-		/// Thrown if the client was initialized as a Noise protocol responder
-		/// or the selected handshake pattern was a one-way pattern.
-		/// </exception>
-		public static NoiseSocket CreateClient(Protocol protocol, ProtocolConfig config, Stream stream, bool leaveOpen = false)
-		{
-			ThrowIfNull(protocol, nameof(protocol));
-			ThrowIfNull(config, nameof(config));
-			ThrowIfNull(stream, nameof(stream));
-
-			if (!config.Initiator)
-			{
-				throw new ArgumentException("The client must be initialized as a Noise protocol initiator.");
-			}
-
-			return new NoiseSocket(true, protocol, config, stream, leaveOpen);
-		}
-
-		/// <summary>
-		/// Initializes a new server instance of the <see cref="NoiseSocket"/> class.
-		/// </summary>
-		/// <param name="stream">The stream for reading and writing encoded protocol messages.</param>
-		/// <param name="leaveOpen">
-		/// True to leave the stream open after the
-		/// <see cref="NoiseSocket"/> object is disposed, false otherwise.
-		/// </param>
-		/// <returns>The new <see cref="NoiseSocket"/> server.</returns>
-		/// <exception cref="ArgumentNullException">
-		/// Thrown if <paramref name="stream"/> is null.
-		/// </exception>
-		public static NoiseSocket CreateServer(Stream stream, bool leaveOpen = false)
-		{
-			ThrowIfNull(stream, nameof(stream));
-
-			return new NoiseSocket(false, null, null, stream, leaveOpen);
-		}
 
 		/// <summary>
 		/// Initializes the current instance of the <see cref="NoiseSocket"/>
@@ -755,6 +746,11 @@ namespace Noise
 				{
 					WritePacket(message.Data.Span, next);
 					next = next.Slice(LenFieldSize + message.Data.Length);
+				}
+
+				if (state == State.Switch || state == State.Retry)
+				{
+					savedMessages = null;
 				}
 
 				prologue.CopyTo(next);

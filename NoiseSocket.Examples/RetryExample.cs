@@ -33,7 +33,7 @@ namespace Noise.Examples
 				var initial = Protocol.Parse("Noise_NN_25519_ChaChaPoly_SHA256".AsSpan());
 				var config = new ProtocolConfig(initiator: true);
 
-				using (var noise = NoiseSocket.CreateClient(initial, config, client))
+				using (var noise = new NoiseSocket(initial, config, client))
 				{
 					// Send the initial handshake message to the server. In the real world the
 					// negotiation data would contain the initial protocol, supported protocols
@@ -83,7 +83,7 @@ namespace Noise.Examples
 				await server.WaitForConnectionAsync();
 
 				// Initialize the NoiseSocket.
-				using (var noise = NoiseSocket.CreateServer(server))
+				using (var noise = new NoiseSocket(server))
 				{
 					// Receive the negotiation data from the client. In the real world the
 					// negotiation data would contain the initial protocol, supported protocols

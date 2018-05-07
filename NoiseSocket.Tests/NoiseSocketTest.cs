@@ -34,8 +34,8 @@ namespace Noise.Tests
 					var protocol = Protocol.Parse(config.ProtocolName.AsSpan());
 					var queue = ReadMessages(vector["messages"]);
 
-					var alice = NoiseSocket.CreateClient(protocol, aliceConfig, stream, true);
-					var bob = NoiseSocket.CreateServer(stream, true);
+					var alice = new NoiseSocket(protocol, aliceConfig, stream, true);
+					var bob = new NoiseSocket(stream, true);
 
 					var aliceEphemeral = config.AliceEphemeral;
 					var bobEphemeral = config.BobEphemeral;

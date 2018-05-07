@@ -66,8 +66,8 @@ namespace Noise.Tests
 						rs: test.RespRemoteStaticRequired ? AliceStaticPublicRaw : null
 					);
 
-					var alice = NoiseSocket.CreateClient(test.Protocol, aliceConfig, stream, true);
-					var bob = NoiseSocket.CreateServer(stream, true);
+					var alice = new NoiseSocket(test.Protocol, aliceConfig, stream, true);
+					var bob = new NoiseSocket(stream, true);
 
 					alice.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, AliceEphemeralRaw.ToArray()));
 					bob.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, BobEphemeralRaw.ToArray()));
