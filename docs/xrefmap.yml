@@ -13,6 +13,25 @@ references:
   commentId: T:Noise.NoiseSocket
   fullName: Noise.NoiseSocket
   nameWithType: NoiseSocket
+- uid: Noise.NoiseSocket.#ctor(Noise.Protocol,Noise.ProtocolConfig,System.IO.Stream,System.Boolean)
+  name: NoiseSocket(Protocol, ProtocolConfig, Stream, Boolean)
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket__ctor_Noise_Protocol_Noise_ProtocolConfig_System_IO_Stream_System_Boolean_
+  commentId: M:Noise.NoiseSocket.#ctor(Noise.Protocol,Noise.ProtocolConfig,System.IO.Stream,System.Boolean)
+  fullName: Noise.NoiseSocket.NoiseSocket(Noise.Protocol, Noise.ProtocolConfig, System.IO.Stream, System.Boolean)
+  nameWithType: NoiseSocket.NoiseSocket(Protocol, ProtocolConfig, Stream, Boolean)
+- uid: Noise.NoiseSocket.#ctor(System.IO.Stream,System.Boolean)
+  name: NoiseSocket(Stream, Boolean)
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket__ctor_System_IO_Stream_System_Boolean_
+  commentId: M:Noise.NoiseSocket.#ctor(System.IO.Stream,System.Boolean)
+  fullName: Noise.NoiseSocket.NoiseSocket(System.IO.Stream, System.Boolean)
+  nameWithType: NoiseSocket.NoiseSocket(Stream, Boolean)
+- uid: Noise.NoiseSocket.#ctor*
+  name: NoiseSocket
+  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket__ctor_
+  commentId: Overload:Noise.NoiseSocket.#ctor
+  isSpec: "True"
+  fullName: Noise.NoiseSocket.NoiseSocket
+  nameWithType: NoiseSocket.NoiseSocket
 - uid: Noise.NoiseSocket.Accept(Noise.Protocol,Noise.ProtocolConfig)
   name: Accept(Protocol, ProtocolConfig)
   href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_Accept_Noise_Protocol_Noise_ProtocolConfig_
@@ -26,32 +45,6 @@ references:
   isSpec: "True"
   fullName: Noise.NoiseSocket.Accept
   nameWithType: NoiseSocket.Accept
-- uid: Noise.NoiseSocket.CreateClient(Noise.Protocol,Noise.ProtocolConfig,System.IO.Stream,System.Boolean)
-  name: CreateClient(Protocol, ProtocolConfig, Stream, Boolean)
-  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_CreateClient_Noise_Protocol_Noise_ProtocolConfig_System_IO_Stream_System_Boolean_
-  commentId: M:Noise.NoiseSocket.CreateClient(Noise.Protocol,Noise.ProtocolConfig,System.IO.Stream,System.Boolean)
-  fullName: Noise.NoiseSocket.CreateClient(Noise.Protocol, Noise.ProtocolConfig, System.IO.Stream, System.Boolean)
-  nameWithType: NoiseSocket.CreateClient(Protocol, ProtocolConfig, Stream, Boolean)
-- uid: Noise.NoiseSocket.CreateClient*
-  name: CreateClient
-  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_CreateClient_
-  commentId: Overload:Noise.NoiseSocket.CreateClient
-  isSpec: "True"
-  fullName: Noise.NoiseSocket.CreateClient
-  nameWithType: NoiseSocket.CreateClient
-- uid: Noise.NoiseSocket.CreateServer(System.IO.Stream,System.Boolean)
-  name: CreateServer(Stream, Boolean)
-  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_CreateServer_System_IO_Stream_System_Boolean_
-  commentId: M:Noise.NoiseSocket.CreateServer(System.IO.Stream,System.Boolean)
-  fullName: Noise.NoiseSocket.CreateServer(System.IO.Stream, System.Boolean)
-  nameWithType: NoiseSocket.CreateServer(Stream, Boolean)
-- uid: Noise.NoiseSocket.CreateServer*
-  name: CreateServer
-  href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_CreateServer_
-  commentId: Overload:Noise.NoiseSocket.CreateServer
-  isSpec: "True"
-  fullName: Noise.NoiseSocket.CreateServer
-  nameWithType: NoiseSocket.CreateServer
 - uid: Noise.NoiseSocket.Dispose
   name: Dispose()
   href: api/Noise.NoiseSocket.html#Noise_NoiseSocket_Dispose
