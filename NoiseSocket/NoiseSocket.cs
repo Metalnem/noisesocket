@@ -22,6 +22,12 @@ namespace Noise
 		private const int LenFieldSize = 2;
 		private const int TagSize = 16;
 
+		// Once we are sure that we are done with all the messages
+		// that are part of the prologue, we no longer have to keep
+		// old messages. The maximum number of messages needed for
+		// the prologue calculation is five (in the Retry case).
+		private const int MaxSavedMessagesCount = 5;
+
 		private static readonly byte[] empty = new byte[0];
 		private static readonly byte[] noiseSocketInit1 = Encoding.UTF8.GetBytes("NoiseSocketInit1");
 		private static readonly byte[] noiseSocketInit2 = Encoding.UTF8.GetBytes("NoiseSocketInit2");
@@ -620,6 +626,11 @@ namespace Noise
 				throw new InvalidOperationException($"Cannot call {nameof(WriteMessageAsync)} before the handshake has been completed.");
 			}
 
+			// Handshake messages might still be saved here (for example, in the
+			// Accept or Switch cases where Alice is using a one-way pattern). The
+			// handshake is complete at this moment, so we no longer have to keep them.
+			savedMessages = null;
+
 			int length = Math.Max(messageBody.Length, paddedLength);
 			int noiseMessageLength = LenFieldSize + length + TagSize;
 
@@ -672,6 +683,11 @@ namespace Noise
 				throw new InvalidOperationException($"Cannot call {nameof(ReadMessageAsync)} before the handshake has been completed.");
 			}
 
+			// Handshake messages might still be saved here (for example, in the
+			// Accept or Switch cases where Alice is using a one-way pattern). The
+			// handshake is complete at this moment, so we no longer have to keep them.
+			savedMessages = null;
+
 			var noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
 			var minSize = LenFieldSize + TagSize;
 
@@ -697,24 +713,13 @@ namespace Noise
 
 		private void SaveMessage(MessageType type, Memory<byte> data, bool copy = true)
 		{
-			if (savedMessages != null)
+			if (savedMessages != null && savedMessages.Count < MaxSavedMessagesCount)
 			{
-				var retry = state == State.Retry;
-				var count = savedMessages.Count;
-
-				// Once we are done with all the messages that are part of
-				// the prologue, we no longer have to keep old messages. In
-				// the Accept/Switch cases that's three messages in total,
-				// and in the Retry case there are five messages.
-
-				if ((!retry && count == 3) || (retry && count == 5))
-				{
-					savedMessages = null;
-				}
-				else
-				{
-					savedMessages.Add(new SavedMessage(type, copy ? data.ToArray() : data));
-				}
+				savedMessages.Add(new SavedMessage(type, copy ? data.ToArray() : data));
+			}
+			else
+			{
+				savedMessages = null;
 			}
 		}
 
