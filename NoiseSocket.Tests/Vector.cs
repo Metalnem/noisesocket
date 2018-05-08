@@ -17,8 +17,14 @@ namespace Noise.Tests
 		[JsonProperty("alice_prologue")]
 		public string AlicePrologue;
 
+		[JsonProperty("alice_psks")]
+		public List<string> AlicePsks;
+
 		[JsonProperty("bob_prologue")]
 		public string BobPrologue;
+
+		[JsonProperty("bob_psks")]
+		public List<string> BobPsks;
 
 		[JsonProperty("handshake_hash")]
 		public string HandshakeHash;

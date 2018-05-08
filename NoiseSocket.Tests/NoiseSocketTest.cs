@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -24,12 +25,14 @@ namespace Noise.Tests
 					var retryConfig = vector["retry"];
 
 					var alicePrologue = GetBytes(vector, "alice_prologue");
+					var alicePsks = GetPsks(vector, "alice_psks");
 					var bobPrologue = GetBytes(vector, "bob_prologue");
+					var bobPsks = GetPsks(vector, "bob_psks");
 					var handshakeHash = GetBytes(vector, "handshake_hash");
 
 					var config = vector["initial"].ToObject<Config>();
-					var aliceConfig = new ProtocolConfig(true, alicePrologue, config.AliceStatic, config.AliceRemoteStatic);
-					var bobConfig = new ProtocolConfig(false, bobPrologue, config.BobStatic, config.BobRemoteStatic);
+					var aliceConfig = new ProtocolConfig(true, alicePrologue, config.AliceStatic, config.AliceRemoteStatic, alicePsks);
+					var bobConfig = new ProtocolConfig(false, bobPrologue, config.BobStatic, config.BobRemoteStatic, bobPsks);
 
 					var protocol = Protocol.Parse(config.ProtocolName.AsSpan());
 					var queue = ReadMessages(vector["messages"]);
@@ -67,8 +70,8 @@ namespace Noise.Tests
 						config = switchConfig.ToObject<Config>();
 						protocol = Protocol.Parse(config.ProtocolName.AsSpan());
 
-						aliceConfig = new ProtocolConfig(false, alicePrologue, config.AliceStatic, config.AliceRemoteStatic);
-						bobConfig = new ProtocolConfig(true, bobPrologue, config.BobStatic, config.BobRemoteStatic);
+						aliceConfig = new ProtocolConfig(false, alicePrologue, config.AliceStatic, config.AliceRemoteStatic, alicePsks);
+						bobConfig = new ProtocolConfig(true, bobPrologue, config.BobStatic, config.BobRemoteStatic, bobPsks);
 
 						var message = queue.Dequeue();
 						stream.Position = 0;
@@ -101,8 +104,8 @@ namespace Noise.Tests
 						config = retryConfig.ToObject<Config>();
 						protocol = Protocol.Parse(config.ProtocolName.AsSpan());
 
-						aliceConfig = new ProtocolConfig(true, alicePrologue, config.AliceStatic, config.AliceRemoteStatic);
-						bobConfig = new ProtocolConfig(false, bobPrologue, config.BobStatic, config.BobRemoteStatic);
+						aliceConfig = new ProtocolConfig(true, alicePrologue, config.AliceStatic, config.AliceRemoteStatic, alicePsks);
+						bobConfig = new ProtocolConfig(false, bobPrologue, config.BobStatic, config.BobRemoteStatic, bobPsks);
 
 						var message = queue.Dequeue();
 						stream.Position = 0;
@@ -175,6 +178,11 @@ namespace Noise.Tests
 		private static byte[] GetBytes(JToken token, string property)
 		{
 			return Hex.Decode(GetString(token, property));
+		}
+
+		private static List<byte[]> GetPsks(JToken token, string property)
+		{
+			return token[property]?.Select(psk => Hex.Decode((string)psk)).ToList();
 		}
 
 		private static Queue<Message> ReadMessages(JToken messages)

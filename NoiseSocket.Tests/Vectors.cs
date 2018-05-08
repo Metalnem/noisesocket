@@ -34,6 +34,10 @@ namespace Noise.Tests
 		private static readonly byte[] SwitchNegotiationData = Hex.Decode("537769746368");
 		private static readonly byte[] RetryNegotiationData = Hex.Decode("5265747279");
 
+		private const string Psk = "54686973206973206d7920417573747269616e20706572737065637469766521";
+		private static readonly List<string> psksHex = new List<string> { Psk };
+		private static readonly List<byte[]> psksRaw = new List<byte[]> { Hex.Decode(Psk) };
+
 		private static readonly List<byte[]> payloads = new List<byte[]>
 		{
 			Hex.Decode("4c756477696720766f6e204d69736573"),
@@ -56,14 +60,16 @@ namespace Noise.Tests
 						initiator: true,
 						prologue: PrologueRaw,
 						s: test.InitStaticRequired ? AliceStaticRaw : null,
-						rs: test.InitRemoteStaticRequired ? BobStaticPublicRaw : null
+						rs: test.InitRemoteStaticRequired ? BobStaticPublicRaw : null,
+						psks: test.PsksRequired ? psksRaw : null
 					);
 
 					var bobConfig = new ProtocolConfig(
 						initiator: false,
 						prologue: PrologueRaw,
 						s: test.RespStaticRequired ? BobStaticRaw : null,
-						rs: test.RespRemoteStaticRequired ? AliceStaticPublicRaw : null
+						rs: test.RespRemoteStaticRequired ? AliceStaticPublicRaw : null,
+						psks: test.PsksRequired ? psksRaw : null
 					);
 
 					var alice = new NoiseSocket(test.Protocol, aliceConfig, stream, true);
@@ -171,7 +177,9 @@ namespace Noise.Tests
 						Switch = test.Response == Response.Switch ? switchConfig : null,
 						Retry = test.Response == Response.Retry ? initialConfig : null,
 						AlicePrologue = PrologueHex,
+						AlicePsks = test.PsksRequired ? psksHex : null,
 						BobPrologue = PrologueHex,
+						BobPsks = test.PsksRequired ? psksHex : null,
 						HandshakeHash = Hex.Encode(writer.HandshakeHash.ToArray()),
 						Messages = proxy.Messages
 					};
@@ -186,22 +194,22 @@ namespace Noise.Tests
 			return vectors;
 		}
 
-		private static IEnumerable<HandshakePattern> Patterns
+		private static IEnumerable<(HandshakePattern, PatternModifiers)> Patterns
 		{
 			get
 			{
-				yield return HandshakePattern.NN;
-				yield return HandshakePattern.NK;
-				yield return HandshakePattern.NX;
-				yield return HandshakePattern.XN;
-				yield return HandshakePattern.XK;
-				yield return HandshakePattern.XX;
-				yield return HandshakePattern.KN;
-				yield return HandshakePattern.KK;
-				yield return HandshakePattern.KX;
-				yield return HandshakePattern.IN;
-				yield return HandshakePattern.IK;
-				yield return HandshakePattern.IX;
+				yield return (HandshakePattern.NN, PatternModifiers.Psk0 | PatternModifiers.Psk2);
+				yield return (HandshakePattern.NK, PatternModifiers.Psk0 | PatternModifiers.Psk2);
+				yield return (HandshakePattern.NX, PatternModifiers.Psk2);
+				yield return (HandshakePattern.XN, PatternModifiers.Psk3);
+				yield return (HandshakePattern.XK, PatternModifiers.Psk3);
+				yield return (HandshakePattern.XX, PatternModifiers.Psk3);
+				yield return (HandshakePattern.KN, PatternModifiers.Psk0 | PatternModifiers.Psk2);
+				yield return (HandshakePattern.KK, PatternModifiers.Psk0 | PatternModifiers.Psk2);
+				yield return (HandshakePattern.KX, PatternModifiers.Psk2);
+				yield return (HandshakePattern.IN, PatternModifiers.Psk1 | PatternModifiers.Psk2);
+				yield return (HandshakePattern.IK, PatternModifiers.Psk1 | PatternModifiers.Psk2);
+				yield return (HandshakePattern.IX, PatternModifiers.Psk2);
 			}
 		}
 
@@ -246,7 +254,7 @@ namespace Noise.Tests
 
 		private static IEnumerable<Test> GetTests()
 		{
-			foreach (var pattern in Patterns)
+			foreach (var (pattern, modifiers) in Patterns)
 			{
 				bool initStaticRequired = pattern.LocalStaticRequired(true);
 				bool initRemoteStaticRequired = pattern.RemoteStaticRequired(true);
@@ -258,24 +266,34 @@ namespace Noise.Tests
 				{
 					foreach (var hash in Hashes)
 					{
-						var protocol = new Protocol(pattern, cipher, hash);
-						var name = Encoding.ASCII.GetString(protocol.Name);
-
-						foreach (var paddedLength in PaddedLengths)
+						foreach (PatternModifiers modifier in Enum.GetValues(typeof(PatternModifiers)))
 						{
-							foreach (var response in Responses)
+							if (!modifiers.HasFlag(modifier))
 							{
-								yield return new Test
+								continue;
+							}
+
+							var protocol = new Protocol(pattern, cipher, hash, modifier);
+							var name = Encoding.ASCII.GetString(protocol.Name);
+							var psksRequired = modifier != PatternModifiers.None;
+
+							foreach (var paddedLength in PaddedLengths)
+							{
+								foreach (var response in Responses)
 								{
-									Protocol = protocol,
-									Name = name,
-									InitStaticRequired = initStaticRequired,
-									InitRemoteStaticRequired = initRemoteStaticRequired,
-									RespStaticRequired = respStaticRequired,
-									RespRemoteStaticRequired = respRemoteStaticRequired,
-									PaddedLength = paddedLength,
-									Response = response
-								};
+									yield return new Test
+									{
+										Protocol = protocol,
+										Name = name,
+										InitStaticRequired = initStaticRequired,
+										InitRemoteStaticRequired = initRemoteStaticRequired,
+										RespStaticRequired = respStaticRequired,
+										RespRemoteStaticRequired = respRemoteStaticRequired,
+										PsksRequired = psksRequired,
+										PaddedLength = paddedLength,
+										Response = response
+									};
+								}
 							}
 						}
 					}

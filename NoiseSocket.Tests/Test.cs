@@ -8,6 +8,7 @@ namespace Noise.Tests
 		public bool InitRemoteStaticRequired;
 		public bool RespStaticRequired;
 		public bool RespRemoteStaticRequired;
+		public bool PsksRequired;
 		public int PaddedLength;
 		public Response Response;
 	}
