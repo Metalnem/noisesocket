@@ -47,6 +47,7 @@ namespace Noise
 
 		private List<SavedMessage> savedMessages;
 		private bool isNextMessageEncrypted;
+		private bool handshakeMessageExpected;
 		private bool disposed;
 
 		/// <summary>
@@ -342,6 +343,7 @@ namespace Noise
 			CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
+			ThrowIfHandshakeMessageExpected();
 
 			if (this.transport != null)
 			{
@@ -433,6 +435,7 @@ namespace Noise
 		public async Task WriteEmptyHandshakeMessageAsync(Memory<byte> negotiationData = default, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
+			ThrowIfHandshakeMessageExpected();
 
 			if (transport != null)
 			{
@@ -473,6 +476,7 @@ namespace Noise
 		public async Task<byte[]> ReadNegotiationDataAsync(CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
+			ThrowIfHandshakeMessageExpected();
 
 			if (transport != null)
 			{
@@ -481,6 +485,9 @@ namespace Noise
 
 			var negotiationData = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
 			SaveMessage(MessageType.ReadNegotiationData, negotiationData);
+
+			// Prevent reading the negotiation data without reading the subsequent Noise handshake message.
+			handshakeMessageExpected = true;
 
 			return negotiationData;
 		}
@@ -524,6 +531,7 @@ namespace Noise
 
 			var noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
 			SaveMessage(MessageType.ReadNoiseMessage, noiseMessage, false);
+			handshakeMessageExpected = false;
 
 			if (noiseMessage.Length == 0)
 			{
@@ -579,6 +587,7 @@ namespace Noise
 
 			var noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
 			SaveMessage(MessageType.ReadNoiseMessage, noiseMessage, false);
+			handshakeMessageExpected = false;
 		}
 
 		/// <summary>
@@ -611,6 +620,7 @@ namespace Noise
 			CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
+			ThrowIfHandshakeMessageExpected();
 
 			if (transport == null)
 			{
@@ -668,6 +678,7 @@ namespace Noise
 		public async Task<byte[]> ReadMessageAsync(CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
+			ThrowIfHandshakeMessageExpected();
 
 			if (transport == null)
 			{
@@ -849,6 +860,14 @@ namespace Noise
 			if (disposed)
 			{
 				throw new ObjectDisposedException(nameof(NoiseSocket));
+			}
+		}
+
+		private void ThrowIfHandshakeMessageExpected()
+		{
+			if (handshakeMessageExpected)
+			{
+				throw new InvalidOperationException("Must read or ignore the handshake message after reading the negotiation data.");
 			}
 		}
 
