@@ -20,10 +20,10 @@
       "output": {
         ".html": {
           "relative_path": "api/Noise.NoiseSocket.html",
-          "hash": "WlDaDMf97CCbgLwHwk162w=="
+          "hash": "2A3zFiwZwlWv2+5eZBn7Bg=="
         }
       },
-      "is_incremental": true,
+      "is_incremental": false,
       "version": ""
     },
     {
@@ -35,7 +35,7 @@
           "hash": "EevRivoTmAYKv6fqRNeBwg=="
         }
       },
-      "is_incremental": true,
+      "is_incremental": false,
       "version": ""
     },
     {
@@ -44,7 +44,7 @@
       "output": {
         ".html": {
           "relative_path": "index.html",
-          "hash": "I/lZpNq1Cm4l0hongoBwzQ=="
+          "hash": "hIE1VqOnRl8fzkjtc6vX7w=="
         }
       },
       "is_incremental": false,
@@ -63,17 +63,17 @@
           "details": "Processor ResourceDocumentProcessor cannot suppport incremental build because the processor doesn't implement ISupportIncrementalDocumentProcessor interface.",
           "incrementalPhase": "build"
         },
-        "TocDocumentProcessor": {
-          "can_incremental": false,
-          "details": "Processor TocDocumentProcessor cannot suppport incremental build because the processor doesn't implement ISupportIncrementalDocumentProcessor interface.",
-          "incrementalPhase": "build"
-        },
         "ConceptualDocumentProcessor": {
           "can_incremental": true,
           "incrementalPhase": "build"
         },
         "ManagedReferenceDocumentProcessor": {
           "can_incremental": true,
+          "incrementalPhase": "build"
+        },
+        "TocDocumentProcessor": {
+          "can_incremental": false,
+          "details": "Processor TocDocumentProcessor cannot suppport incremental build because the processor doesn't implement ISupportIncrementalDocumentProcessor interface.",
           "incrementalPhase": "build"
         }
       }

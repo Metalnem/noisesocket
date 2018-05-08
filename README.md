@@ -40,5 +40,5 @@
 ## Installation
 
 ```
-> dotnet add package NoiseSocket.NET --version 0.4.0-preview
+> dotnet add package NoiseSocket.NET --version 0.7.0-rc
 ```
