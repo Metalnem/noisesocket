@@ -743,7 +743,7 @@ namespace Noise
 				case State.Retry: noiseSocketInit = noiseSocketInit3; break;
 			}
 
-			var prologue = this.config.Prologue.AsSpan();
+			var prologue = config.Prologue.AsSpan();
 			var length = noiseSocketInit.Length + savedMessages.Sum(message => LenFieldSize + message.Data.Length) + prologue.Length;
 			var pool = ArrayPool<byte>.Shared;
 			var buffer = pool.Rent(length);
@@ -819,7 +819,7 @@ namespace Noise
 				// The responding negotiation_data_len
 				// The responding negotiation_data
 				// The responding noise_message_len (two bytes of zeros)
-				// The responding noise_message (zero-length, shown for completeness) 
+				// The responding noise_message (zero-length, shown for completeness)
 				// The retry negotiation_data_len
 				// The retry negotiation_data
 
