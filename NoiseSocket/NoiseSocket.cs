@@ -45,9 +45,9 @@ namespace Noise
 		private Transport transport;
 		private byte[] handshakeHash;
 
-		private List<SavedMessage> savedMessages;
+		private List<Memory<byte>> savedMessages;
 		private bool isNextMessageEncrypted;
-		private bool handshakeMessageExpected;
+		private HandshakeOperation lastOperation;
 		private bool disposed;
 
 		/// <summary>
@@ -86,8 +86,9 @@ namespace Noise
 			this.stream = stream;
 			this.leaveOpen = leaveOpen;
 
-			savedMessages = new List<SavedMessage>();
+			savedMessages = new List<Memory<byte>>();
 			isNextMessageEncrypted = protocol != null && IsInitialMessageEncrypted(protocol);
+			lastOperation = config.Initiator ? HandshakeOperation.ReadHandshakeMessage : HandshakeOperation.WriteHandshakeMessage;
 		}
 
 		/// <summary>
@@ -108,8 +109,9 @@ namespace Noise
 			this.stream = stream;
 			this.leaveOpen = leaveOpen;
 
-			savedMessages = new List<SavedMessage>();
+			savedMessages = new List<Memory<byte>>();
 			isNextMessageEncrypted = protocol != null && IsInitialMessageEncrypted(protocol);
+			lastOperation = HandshakeOperation.WriteHandshakeMessage;
 		}
 
 		/// <summary>
@@ -343,7 +345,6 @@ namespace Noise
 			CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
-			ThrowIfHandshakeMessageExpected();
 
 			if (this.transport != null)
 			{
@@ -360,7 +361,7 @@ namespace Noise
 				throw new ArgumentException($"Handshake message must be less than or equal to {Protocol.MaxMessageLength} bytes in length.");
 			}
 
-			SaveMessage(MessageType.WriteNegotiationData, negotiationData);
+			ProcessMessage(HandshakeOperation.WriteNegotiationData, negotiationData);
 			handshakeState = handshakeState ?? InitializeHandshakeState();
 
 			// negotiation_data_len (2 bytes)
@@ -400,7 +401,7 @@ namespace Noise
 
 				WritePacket(negotiationData.Span, buffer);
 				BinaryPrimitives.WriteUInt16BigEndian(buffer.AsSpan(negotiationLength), (ushort)bytesWritten);
-				SaveMessage(MessageType.WriteNoiseMessage, ciphertext.Slice(0, bytesWritten));
+				ProcessMessage(HandshakeOperation.WriteHandshakeMessage, ciphertext.Slice(0, bytesWritten));
 
 				int noiseLength = LenFieldSize + bytesWritten;
 				int handshakeLength = negotiationLength + noiseLength;
@@ -435,7 +436,6 @@ namespace Noise
 		public async Task WriteEmptyHandshakeMessageAsync(Memory<byte> negotiationData = default, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
-			ThrowIfHandshakeMessageExpected();
 
 			if (transport != null)
 			{
@@ -448,8 +448,8 @@ namespace Noise
 				throw new ArgumentException($"Negotiation data must be less than or equal to {Protocol.MaxMessageLength} bytes in length.");
 			}
 
-			SaveMessage(MessageType.WriteNegotiationData, negotiationData);
-			SaveMessage(MessageType.WriteNoiseMessage, Memory<byte>.Empty, false);
+			ProcessMessage(HandshakeOperation.WriteNegotiationData, negotiationData);
+			ProcessMessage(HandshakeOperation.WriteHandshakeMessage, Memory<byte>.Empty, false);
 
 			var message = new byte[LenFieldSize + negotiationData.Length + LenFieldSize];
 			WritePacket(negotiationData.Span, message);
@@ -476,7 +476,6 @@ namespace Noise
 		public async Task<byte[]> ReadNegotiationDataAsync(CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
-			ThrowIfHandshakeMessageExpected();
 
 			if (transport != null)
 			{
@@ -484,10 +483,7 @@ namespace Noise
 			}
 
 			var negotiationData = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
-			SaveMessage(MessageType.ReadNegotiationData, negotiationData);
-
-			// Prevent reading the negotiation data without reading the subsequent Noise handshake message.
-			handshakeMessageExpected = true;
+			ProcessMessage(HandshakeOperation.ReadNegotiationData, negotiationData);
 
 			return negotiationData;
 		}
@@ -530,8 +526,7 @@ namespace Noise
 			handshakeState = handshakeState ?? InitializeHandshakeState();
 
 			var noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
-			SaveMessage(MessageType.ReadNoiseMessage, noiseMessage, false);
-			handshakeMessageExpected = false;
+			ProcessMessage(HandshakeOperation.ReadHandshakeMessage, noiseMessage, false);
 
 			if (noiseMessage.Length == 0)
 			{
@@ -586,8 +581,7 @@ namespace Noise
 			}
 
 			var noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
-			SaveMessage(MessageType.ReadNoiseMessage, noiseMessage, false);
-			handshakeMessageExpected = false;
+			ProcessMessage(HandshakeOperation.ReadHandshakeMessage, noiseMessage, false);
 		}
 
 		/// <summary>
@@ -620,7 +614,6 @@ namespace Noise
 			CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
-			ThrowIfHandshakeMessageExpected();
 
 			if (transport == null)
 			{
@@ -678,7 +671,6 @@ namespace Noise
 		public async Task<byte[]> ReadMessageAsync(CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
-			ThrowIfHandshakeMessageExpected();
 
 			if (transport == null)
 			{
@@ -713,11 +705,20 @@ namespace Noise
 			this.initializer = initializer;
 		}
 
-		private void SaveMessage(MessageType type, Memory<byte> data, bool copy = true)
+		private void ProcessMessage(HandshakeOperation operation, Memory<byte> data, bool copy = true)
 		{
+			var next = Next(lastOperation);
+
+			if (next != operation)
+			{
+				throw new InvalidOperationException($"Expected the call to {next}, but {operation} was called instead.");
+			}
+
+			lastOperation = operation;
+
 			if (savedMessages != null && savedMessages.Count < MaxSavedMessagesCount)
 			{
-				savedMessages.Add(new SavedMessage(type, copy ? data.ToArray() : data));
+				savedMessages.Add(copy ? data.ToArray() : data);
 			}
 			else
 			{
@@ -744,7 +745,7 @@ namespace Noise
 			}
 
 			var prologue = config.Prologue.AsSpan();
-			var length = noiseSocketInit.Length + savedMessages.Sum(message => LenFieldSize + message.Data.Length) + prologue.Length;
+			var length = noiseSocketInit.Length + savedMessages.Sum(message => LenFieldSize + message.Length) + prologue.Length;
 			var pool = ArrayPool<byte>.Shared;
 			var buffer = pool.Rent(length);
 
@@ -755,8 +756,8 @@ namespace Noise
 
 				foreach (var message in savedMessages)
 				{
-					WritePacket(message.Data.Span, next);
-					next = next.Slice(LenFieldSize + message.Data.Length);
+					WritePacket(message.Span, next);
+					next = next.Slice(LenFieldSize + message.Length);
 				}
 
 				if (state == State.Switch || state == State.Retry)
@@ -790,16 +791,15 @@ namespace Noise
 				return false;
 			}
 
-			int expectedCount = 0;
-
 			if (state == State.Initial || state == State.Accept)
 			{
 				// The initial negotiation_data_len
 				// The initial negotiation_data
 
-				expectedCount = 1;
+				return savedMessages.Count == 1;
 			}
-			else if (state == State.Switch)
+
+			if (state == State.Switch)
 			{
 				// The initial negotiation_data_len
 				// The initial negotiation_data
@@ -808,9 +808,10 @@ namespace Noise
 				// The responding negotiation_data_len
 				// The responding negotiation_data
 
-				expectedCount = 3;
+				return savedMessages.Count == 3;
 			}
-			else if (state == State.Retry)
+
+			if (state == State.Retry)
 			{
 				// The initial negotiation_data_len
 				// The initial negotiation_data
@@ -823,36 +824,22 @@ namespace Noise
 				// The retry negotiation_data_len
 				// The retry negotiation_data
 
-				expectedCount = 5;
+				return savedMessages.Count == 5;
 			}
 
-			var actual = savedMessages.Select(message => message.Type);
-			var expected = LongestValidPrologue(client).Take(expectedCount);
-
-			return expected.SequenceEqual(actual);
+			return false;
 		}
 
-		private static IEnumerable<MessageType> LongestValidPrologue(bool client)
+		private static HandshakeOperation Next(HandshakeOperation operation)
 		{
-			return client ? LongestValidPrologueClient() : LongestValidPrologueServer();
-		}
-
-		private static IEnumerable<MessageType> LongestValidPrologueClient()
-		{
-			yield return MessageType.WriteNegotiationData;
-			yield return MessageType.WriteNoiseMessage;
-			yield return MessageType.ReadNegotiationData;
-			yield return MessageType.ReadNoiseMessage;
-			yield return MessageType.WriteNegotiationData;
-		}
-
-		private static IEnumerable<MessageType> LongestValidPrologueServer()
-		{
-			yield return MessageType.ReadNegotiationData;
-			yield return MessageType.ReadNoiseMessage;
-			yield return MessageType.WriteNegotiationData;
-			yield return MessageType.WriteNoiseMessage;
-			yield return MessageType.ReadNegotiationData;
+			switch (operation)
+			{
+				case HandshakeOperation.ReadNegotiationData: return HandshakeOperation.ReadHandshakeMessage;
+				case HandshakeOperation.WriteNegotiationData: return HandshakeOperation.WriteHandshakeMessage;
+				case HandshakeOperation.ReadHandshakeMessage: return HandshakeOperation.WriteNegotiationData;
+				case HandshakeOperation.WriteHandshakeMessage: return HandshakeOperation.ReadNegotiationData;
+				default: throw new InvalidOperationException("Unknown handshake operation.");
+			}
 		}
 
 		private void ThrowIfDisposed()
@@ -860,14 +847,6 @@ namespace Noise
 			if (disposed)
 			{
 				throw new ObjectDisposedException(nameof(NoiseSocket));
-			}
-		}
-
-		private void ThrowIfHandshakeMessageExpected()
-		{
-			if (handshakeMessageExpected)
-			{
-				throw new InvalidOperationException("Must read or ignore the handshake message after reading the negotiation data.");
 			}
 		}
 
@@ -978,24 +957,12 @@ namespace Noise
 			Retry
 		}
 
-		private enum MessageType
+		private enum HandshakeOperation
 		{
 			ReadNegotiationData,
 			WriteNegotiationData,
-			ReadNoiseMessage,
-			WriteNoiseMessage
-		}
-
-		private struct SavedMessage
-		{
-			public readonly MessageType Type;
-			public readonly Memory<byte> Data;
-
-			public SavedMessage(MessageType type, Memory<byte> data)
-			{
-				Type = type;
-				Data = data;
-			}
+			ReadHandshakeMessage,
+			WriteHandshakeMessage
 		}
 	}
 }
