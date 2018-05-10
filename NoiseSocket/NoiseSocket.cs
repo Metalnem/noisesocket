@@ -150,6 +150,9 @@ namespace Noise
 		/// <exception cref="ObjectDisposedException">
 		/// Thrown if the current instance has already been disposed.
 		/// </exception>
+		/// <exception cref="NotSupportedException">
+		/// Thrown if the selected handshake pattern was a one-way pattern.
+		/// </exception>
 		/// <exception cref="InvalidOperationException">
 		/// Thrown if the handshake has already been completed,
 		/// the protocol has already been changed once, or this
@@ -159,8 +162,7 @@ namespace Noise
 		/// Thrown if either <paramref name="protocol"/> or <paramref name="config"/> is null.
 		/// </exception>
 		/// <exception cref="ArgumentException">
-		/// Thrown if the server attempted to accept a new protocol as an initiator
-		/// or the selected handshake pattern was a one-way pattern.
+		/// Thrown if the server attempted to accept a new protocol as an initiator.
 		/// </exception>
 		/// <remarks>
 		/// This method can also throw all exceptions that <see cref="Protocol.Create(ProtocolConfig)"/>
@@ -197,6 +199,9 @@ namespace Noise
 		/// <exception cref="ObjectDisposedException">
 		/// Thrown if the current instance has already been disposed.
 		/// </exception>
+		/// <exception cref="NotSupportedException">
+		/// Thrown if the selected handshake pattern was a one-way pattern.
+		/// </exception>
 		/// <exception cref="InvalidOperationException">
 		/// Thrown if the handshake has already been completed
 		/// or the protocol has already been changed once.
@@ -206,8 +211,7 @@ namespace Noise
 		/// </exception>
 		/// <exception cref="ArgumentException">
 		/// Thrown if the client attempted to switch to a new protocol as an initiator,
-		/// the server attempted to switch to a new protocol as a responder,
-		/// or the selected handshake pattern was a one-way pattern.
+		/// or the server attempted to switch to a new protocol as a responder.
 		/// </exception>
 		/// <remarks>
 		/// This method can also throw all exceptions that <see cref="Protocol.Create(ProtocolConfig)"/>
@@ -244,6 +248,9 @@ namespace Noise
 		/// <exception cref="ObjectDisposedException">
 		/// Thrown if the current instance has already been disposed.
 		/// </exception>
+		/// <exception cref="NotSupportedException">
+		/// Thrown if the selected handshake pattern was a one-way pattern.
+		/// </exception>
 		/// <exception cref="InvalidOperationException">
 		/// Thrown if the handshake has already been completed
 		/// or the protocol has already been changed once.
@@ -253,8 +260,7 @@ namespace Noise
 		/// </exception>
 		/// <exception cref="ArgumentException">
 		/// Thrown if the client attempted to retry with a new protocol as a responder,
-		/// the server attempted to retry with a new protocol as an initiator,
-		/// or the selected handshake pattern was a one-way pattern.
+		/// or the server attempted to retry with a new protocol as an initiator.
 		/// </exception>
 		/// <remarks>
 		/// This method can also throw all exceptions that <see cref="Protocol.Create(ProtocolConfig)"/>
@@ -283,7 +289,7 @@ namespace Noise
 		{
 			if (protocol.HandshakePattern.Patterns.Count() == 1)
 			{
-				throw new ArgumentException("One-way patterns are not yet supported.");
+				throw new NotSupportedException("One-way patterns are not yet supported.");
 			}
 
 			if (transport != null)
