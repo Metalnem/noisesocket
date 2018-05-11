@@ -203,8 +203,9 @@ namespace Noise
 		/// Thrown if the selected handshake pattern was a one-way pattern.
 		/// </exception>
 		/// <exception cref="InvalidOperationException">
-		/// Thrown if the handshake has already been completed
-		/// or the protocol has already been changed once.
+		/// Thrown if the handshake has already been completed, the protocol
+		/// has already been changed once, or the server attempted to perform
+		/// the fallback handshake without being previously initialized.
 		/// </exception>
 		/// <exception cref="ArgumentNullException">
 		/// Thrown if either <paramref name="protocol"/> or <paramref name="config"/> is null.
@@ -215,7 +216,8 @@ namespace Noise
 		/// </exception>
 		/// <remarks>
 		/// This method can also throw all exceptions that <see cref="Protocol.Create(ProtocolConfig)"/>
-		/// method can throw. See the <see cref="Protocol"/> class documentation for more details.
+		/// and <see cref="HandshakeState.Fallback(CipherFunction, HashFunction)"/> methods can throw.
+		/// See <see cref="Protocol"/> and <see cref="HandshakeState"/> documentation for more details.
 		/// </remarks>
 		public void Switch(Protocol protocol, ProtocolConfig config)
 		{
@@ -287,6 +289,13 @@ namespace Noise
 
 		private void Reinitialize(Protocol protocol, ProtocolConfig config, State state)
 		{
+			bool fallback = state == State.Switch && (protocol.Modifiers & PatternModifiers.Fallback) != 0;
+
+			if (fallback && handshakeState == null)
+			{
+				throw new InvalidOperationException("Cannot perform the fallback handshake on an uninitialized server.");
+			}
+
 			if (protocol.HandshakePattern.Patterns.Count() == 1)
 			{
 				throw new NotSupportedException("One-way patterns are not yet supported.");
@@ -306,7 +315,11 @@ namespace Noise
 			this.config = config;
 			this.state = state;
 
-			if (handshakeState != null)
+			if (fallback)
+			{
+				handshakeState.Fallback(protocol.Cipher, protocol.Hash);
+			}
+			else if (handshakeState != null)
 			{
 				handshakeState.Dispose();
 				handshakeState = null;
@@ -914,9 +927,7 @@ namespace Noise
 
 		private static bool IsInitialMessageEncrypted(Protocol protocol)
 		{
-			var psks = PatternModifiers.Psk0 | PatternModifiers.Psk1 | PatternModifiers.Psk2 | PatternModifiers.Psk3;
-
-			if ((protocol.Modifiers & psks) != 0)
+			if (protocol.Modifiers != PatternModifiers.None)
 			{
 				return true;
 			}
