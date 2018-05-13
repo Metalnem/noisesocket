@@ -740,7 +740,7 @@ namespace Noise
 
 				var config = new ProtocolConfig(
 					this.config.Initiator,
-					prologue: CalculatePrologue(),
+					CalculatePrologue(),
 					this.config.LocalStatic,
 					this.config.RemoteStatic,
 					this.config.PreSharedKeys
