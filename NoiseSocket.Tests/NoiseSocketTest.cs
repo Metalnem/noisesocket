@@ -38,7 +38,7 @@ namespace Noise.Tests
 					var queue = ReadMessages(vector["messages"]);
 
 					var alice = new NoiseSocket(protocol, aliceConfig, stream, true);
-					var bob = new NoiseSocket(stream, true);
+					var bob = new NoiseSocket(protocol, bobConfig, stream, true);
 
 					var aliceEphemeral = config.AliceEphemeral;
 					var bobEphemeral = config.BobEphemeral;
@@ -82,22 +82,42 @@ namespace Noise.Tests
 						stream.Position = 0;
 						Assert.Equal(message.NegotiationData, await bob.ReadNegotiationDataAsync());
 
-						bob.Switch(protocol, bobConfig);
-						bob.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, config.BobEphemeral));
-						await bob.IgnoreHandshakeMessageAsync();
+						if ((protocol.Modifiers & PatternModifiers.Fallback) != 0)
+						{
+							await bob.ReadHandshakeMessageAsync();
+							bob.Switch(protocol, bobConfig);
 
-						message = queue.Dequeue();
-						stream.Position = 0;
+							message = queue.Dequeue();
+							stream.Position = 0;
 
-						await bob.WriteHandshakeMessageAsync(message.NegotiationData, message.MessageBody, message.PaddedLength);
-						Assert.Equal(message.Value, Utilities.ReadMessage(stream));
+							await bob.WriteHandshakeMessageAsync(message.NegotiationData, message.MessageBody, message.PaddedLength);
+							Assert.Equal(message.Value, Utilities.ReadMessage(stream));
 
-						stream.Position = 0;
-						Assert.Equal(message.NegotiationData, await alice.ReadNegotiationDataAsync());
+							stream.Position = 0;
+							Assert.Equal(message.NegotiationData, await alice.ReadNegotiationDataAsync());
 
-						alice.Switch(protocol, aliceConfig);
-						alice.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, config.AliceEphemeral));
-						Assert.Equal(message.MessageBody, await alice.ReadHandshakeMessageAsync());
+							alice.Switch(protocol, aliceConfig);
+							Assert.Equal(message.MessageBody, await alice.ReadHandshakeMessageAsync());
+						}
+						else
+						{
+							bob.Switch(protocol, bobConfig);
+							bob.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, config.BobEphemeral));
+							await bob.IgnoreHandshakeMessageAsync();
+
+							message = queue.Dequeue();
+							stream.Position = 0;
+
+							await bob.WriteHandshakeMessageAsync(message.NegotiationData, message.MessageBody, message.PaddedLength);
+							Assert.Equal(message.Value, Utilities.ReadMessage(stream));
+
+							stream.Position = 0;
+							Assert.Equal(message.NegotiationData, await alice.ReadNegotiationDataAsync());
+
+							alice.Switch(protocol, aliceConfig);
+							alice.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, config.AliceEphemeral));
+							Assert.Equal(message.MessageBody, await alice.ReadHandshakeMessageAsync());
+						}
 					}
 					else if (retryConfig != null)
 					{

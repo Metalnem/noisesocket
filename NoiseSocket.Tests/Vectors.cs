@@ -105,12 +105,12 @@ namespace Noise.Tests
 							await bob.ReadHandshakeMessageAsync();
 							stream.Position = 0;
 
-							bob.Switch(test.Fallback, new ProtocolConfig(true, PrologueRaw, BobStaticPublicRaw));
+							bob.Switch(test.Fallback, new ProtocolConfig(true, PrologueRaw, BobStaticRaw));
 
 							await proxy.WriteHandshakeMessageAsync(bob, SwitchNegotiationData, queue.Dequeue());
 							await alice.ReadNegotiationDataAsync();
 
-							alice.Switch(test.Fallback, new ProtocolConfig(false, PrologueRaw, AliceStaticPublicRaw));
+							alice.Switch(test.Fallback, new ProtocolConfig(false, PrologueRaw, AliceStaticRaw));
 
 							await alice.ReadHandshakeMessageAsync();
 							stream.Position = 0;
