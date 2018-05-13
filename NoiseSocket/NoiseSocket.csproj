@@ -6,7 +6,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageId>NoiseSocket.NET</PackageId>
     <Title>NoiseSocket.NET</Title>
-    <PackageVersion>0.7.0-rc</PackageVersion>
+    <PackageVersion>0.8.0-rc</PackageVersion>
     <Authors>Nemanja Mijailovic</Authors>
     <PackageProjectUrl>https://github.com/Metalnem/noisesocket</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Metalnem/noisesocket</RepositoryUrl>
