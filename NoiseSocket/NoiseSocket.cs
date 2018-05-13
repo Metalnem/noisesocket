@@ -37,6 +37,7 @@ namespace Noise
 		private Protocol protocol;
 		private ProtocolConfig config;
 		private State state;
+		private bool fallback;
 		private readonly Stream stream;
 		private readonly bool leaveOpen;
 
@@ -164,10 +165,6 @@ namespace Noise
 		/// <exception cref="ArgumentException">
 		/// Thrown if the server attempted to accept a new protocol as an initiator.
 		/// </exception>
-		/// <remarks>
-		/// This method can also throw all exceptions that <see cref="Protocol.Create(ProtocolConfig)"/>
-		/// method can throw. See the <see cref="Protocol"/> class documentation for more details.
-		/// </remarks>
 		public void Accept(Protocol protocol, ProtocolConfig config)
 		{
 			ThrowIfDisposed();
@@ -214,11 +211,6 @@ namespace Noise
 		/// Thrown if the client attempted to switch to a new protocol as an initiator,
 		/// or the server attempted to switch to a new protocol as a responder.
 		/// </exception>
-		/// <remarks>
-		/// This method can also throw all exceptions that <see cref="Protocol.Create(ProtocolConfig)"/>
-		/// and <see cref="HandshakeState.Fallback(CipherFunction, HashFunction)"/> methods can throw.
-		/// See <see cref="Protocol"/> and <see cref="HandshakeState"/> documentation for more details.
-		/// </remarks>
 		public void Switch(Protocol protocol, ProtocolConfig config)
 		{
 			ThrowIfDisposed();
@@ -264,10 +256,6 @@ namespace Noise
 		/// Thrown if the client attempted to retry with a new protocol as a responder,
 		/// or the server attempted to retry with a new protocol as an initiator.
 		/// </exception>
-		/// <remarks>
-		/// This method can also throw all exceptions that <see cref="Protocol.Create(ProtocolConfig)"/>
-		/// method can throw. See the <see cref="Protocol"/> class documentation for more details.
-		/// </remarks>
 		public void Retry(Protocol protocol, ProtocolConfig config)
 		{
 			ThrowIfDisposed();
@@ -314,12 +302,9 @@ namespace Noise
 			this.protocol = protocol;
 			this.config = config;
 			this.state = state;
+			this.fallback = fallback;
 
-			if (fallback)
-			{
-				handshakeState.Fallback(protocol.Cipher, protocol.Hash);
-			}
-			else if (handshakeState != null)
+			if (!fallback && handshakeState != null)
 			{
 				handshakeState.Dispose();
 				handshakeState = null;
@@ -355,7 +340,8 @@ namespace Noise
 		/// <exception cref="NotSupportedException">Thrown if the stream does not support reading.</exception>
 		/// <remarks>
 		/// This method can also throw all exceptions that <see cref="Protocol.Create(ProtocolConfig)"/>
-		/// method can throw. See the <see cref="Protocol"/> class documentation for more details.
+		/// and <see cref="HandshakeState.Fallback(Protocol, ProtocolConfig)"/> methods can throw.
+		/// See <see cref="Protocol"/> and <see cref="HandshakeState"/> documentation for more details.
 		/// </remarks>
 		public async Task WriteHandshakeMessageAsync(
 			Memory<byte> negotiationData = default,
@@ -381,7 +367,7 @@ namespace Noise
 			}
 
 			ProcessMessage(HandshakeOperation.WriteNegotiationData, negotiationData);
-			handshakeState = handshakeState ?? InitializeHandshakeState();
+			InitializeHandshakeState();
 
 			// negotiation_data_len (2 bytes)
 			// negotiation_data
@@ -531,7 +517,8 @@ namespace Noise
 		/// <exception cref="NotSupportedException">Thrown if the stream does not support reading.</exception>
 		/// <remarks>
 		/// This method can also throw all exceptions that <see cref="Protocol.Create(ProtocolConfig)"/>
-		/// method can throw. See the <see cref="Protocol"/> class documentation for more details.
+		/// and <see cref="HandshakeState.Fallback(Protocol, ProtocolConfig)"/> methods can throw.
+		/// See <see cref="Protocol"/> and <see cref="HandshakeState"/> documentation for more details.
 		/// </remarks>
 		public async Task<byte[]> ReadHandshakeMessageAsync(CancellationToken cancellationToken = default)
 		{
@@ -542,7 +529,7 @@ namespace Noise
 				throw new InvalidOperationException($"Cannot call {nameof(ReadHandshakeMessageAsync)} after the handshake has been completed.");
 			}
 
-			handshakeState = handshakeState ?? InitializeHandshakeState();
+			InitializeHandshakeState();
 
 			var noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
 			ProcessMessage(HandshakeOperation.ReadHandshakeMessage, noiseMessage, false);
@@ -745,7 +732,20 @@ namespace Noise
 			}
 		}
 
-		private HandshakeState InitializeHandshakeState()
+		private void InitializeHandshakeState()
+		{
+			if (fallback)
+			{
+				handshakeState.Fallback(protocol, config);
+				fallback = false;
+			}
+			else if (handshakeState == null)
+			{
+				handshakeState = CreateHandshakeState();
+			}
+		}
+
+		private HandshakeState CreateHandshakeState()
 		{
 			if (protocol == null)
 			{
