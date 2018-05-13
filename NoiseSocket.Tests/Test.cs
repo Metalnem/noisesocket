@@ -3,7 +3,7 @@ namespace Noise.Tests
 	internal sealed class Test
 	{
 		public Protocol Protocol;
-		public string Name;
+		public Protocol Fallback;
 		public bool InitStaticRequired;
 		public bool InitRemoteStaticRequired;
 		public bool RespStaticRequired;

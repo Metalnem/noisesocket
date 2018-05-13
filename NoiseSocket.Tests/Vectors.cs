@@ -73,7 +73,7 @@ namespace Noise.Tests
 					);
 
 					var alice = new NoiseSocket(test.Protocol, aliceConfig, stream, true);
-					var bob = new NoiseSocket(stream, true);
+					var bob = new NoiseSocket(test.Protocol, bobConfig, stream, true);
 
 					alice.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, AliceEphemeralRaw.ToArray()));
 					bob.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, BobEphemeralRaw.ToArray()));
@@ -100,20 +100,38 @@ namespace Noise.Tests
 						await proxy.WriteHandshakeMessageAsync(alice, InitialNegotiationData, queue.Dequeue());
 						await bob.ReadNegotiationDataAsync();
 
-						bob.Switch(test.Protocol, aliceConfig);
-						bob.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, AliceEphemeralRaw.ToArray()));
+						if (test.Fallback != null)
+						{
+							await bob.ReadHandshakeMessageAsync();
+							stream.Position = 0;
 
-						await bob.IgnoreHandshakeMessageAsync();
-						stream.Position = 0;
+							bob.Switch(test.Fallback, new ProtocolConfig(true, PrologueRaw, BobStaticPublicRaw));
 
-						await proxy.WriteHandshakeMessageAsync(bob, SwitchNegotiationData, queue.Dequeue());
-						await alice.ReadNegotiationDataAsync();
+							await proxy.WriteHandshakeMessageAsync(bob, SwitchNegotiationData, queue.Dequeue());
+							await alice.ReadNegotiationDataAsync();
 
-						alice.Switch(test.Protocol, bobConfig);
-						alice.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, BobEphemeralRaw.ToArray()));
+							alice.Switch(test.Fallback, new ProtocolConfig(false, PrologueRaw, AliceStaticPublicRaw));
 
-						await alice.ReadHandshakeMessageAsync();
-						stream.Position = 0;
+							await alice.ReadHandshakeMessageAsync();
+							stream.Position = 0;
+						}
+						else
+						{
+							bob.Switch(test.Protocol, aliceConfig);
+							bob.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, AliceEphemeralRaw.ToArray()));
+
+							await bob.IgnoreHandshakeMessageAsync();
+							stream.Position = 0;
+
+							await proxy.WriteHandshakeMessageAsync(bob, SwitchNegotiationData, queue.Dequeue());
+							await alice.ReadNegotiationDataAsync();
+
+							alice.Switch(test.Protocol, bobConfig);
+							alice.SetInitializer(handshakeState => Utilities.SetDh(handshakeState, BobEphemeralRaw.ToArray()));
+
+							await alice.ReadHandshakeMessageAsync();
+							stream.Position = 0;
+						}
 					}
 					else if (test.Response == Response.Retry)
 					{
@@ -151,7 +169,7 @@ namespace Noise.Tests
 
 					var initialConfig = new Config
 					{
-						ProtocolName = test.Name,
+						ProtocolName = Encoding.ASCII.GetString(test.Protocol.Name),
 						AliceStatic = aliceConfig.LocalStatic,
 						AliceEphemeral = AliceEphemeralRaw,
 						AliceRemoteStatic = aliceConfig.RemoteStatic,
@@ -162,7 +180,7 @@ namespace Noise.Tests
 
 					var switchConfig = new Config
 					{
-						ProtocolName = test.Name,
+						ProtocolName = Encoding.ASCII.GetString(test.Protocol.Name),
 						AliceStatic = bobConfig.LocalStatic,
 						AliceEphemeral = BobEphemeralRaw,
 						AliceRemoteStatic = bobConfig.RemoteStatic,
@@ -170,6 +188,18 @@ namespace Noise.Tests
 						BobEphemeral = AliceEphemeralRaw,
 						BobRemoteStatic = aliceConfig.RemoteStatic
 					};
+
+					if (test.Fallback != null)
+					{
+						switchConfig = new Config
+						{
+							ProtocolName = Encoding.ASCII.GetString(test.Fallback.Name),
+							AliceStatic = AliceStaticRaw,
+							AliceEphemeral = AliceEphemeralRaw,
+							BobStatic = BobStaticRaw,
+							BobEphemeral = BobEphemeralRaw
+						};
+					}
 
 					var vector = new Vector
 					{
@@ -266,6 +296,8 @@ namespace Noise.Tests
 				{
 					foreach (var hash in Hashes)
 					{
+						var fallback = new Protocol(HandshakePattern.XX, cipher, hash, PatternModifiers.Fallback);
+
 						foreach (PatternModifiers modifier in Enum.GetValues(typeof(PatternModifiers)))
 						{
 							if (!modifiers.HasFlag(modifier))
@@ -284,7 +316,6 @@ namespace Noise.Tests
 									yield return new Test
 									{
 										Protocol = protocol,
-										Name = name,
 										InitStaticRequired = initStaticRequired,
 										InitRemoteStaticRequired = initRemoteStaticRequired,
 										RespStaticRequired = respStaticRequired,
@@ -293,6 +324,22 @@ namespace Noise.Tests
 										PaddedLength = paddedLength,
 										Response = response
 									};
+
+									if (response == Response.Switch)
+									{
+										yield return new Test
+										{
+											Protocol = protocol,
+											Fallback = fallback,
+											InitStaticRequired = initStaticRequired,
+											InitRemoteStaticRequired = initRemoteStaticRequired,
+											RespStaticRequired = respStaticRequired,
+											RespRemoteStaticRequired = respRemoteStaticRequired,
+											PsksRequired = psksRequired,
+											PaddedLength = paddedLength,
+											Response = response
+										};
+									}
 								}
 							}
 						}
