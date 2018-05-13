@@ -736,23 +736,41 @@ namespace Noise
 		{
 			if (fallback)
 			{
+				Debug.Assert(protocol != null);
+
+				var config = new ProtocolConfig(
+					this.config.Initiator,
+					prologue: CalculatePrologue(),
+					this.config.LocalStatic,
+					this.config.RemoteStatic,
+					this.config.PreSharedKeys
+				);
+
 				handshakeState.Fallback(protocol, config);
 				fallback = false;
 			}
 			else if (handshakeState == null)
 			{
-				handshakeState = CreateHandshakeState();
+				if (protocol == null)
+				{
+					string error = $"Cannot perform the handshake before calling either {nameof(Accept)}, {nameof(Switch)}, or {nameof(Retry)}.";
+					throw new InvalidOperationException(error);
+				}
+
+				handshakeState = protocol.Create(
+					config.Initiator,
+					CalculatePrologue(),
+					config.LocalStatic,
+					config.RemoteStatic,
+					config.PreSharedKeys
+				);
+
+				initializer?.Invoke(handshakeState);
 			}
 		}
 
-		private HandshakeState CreateHandshakeState()
+		private byte[] CalculatePrologue()
 		{
-			if (protocol == null)
-			{
-				string error = $"Cannot perform the handshake before calling either {nameof(Accept)}, {nameof(Switch)}, or {nameof(Retry)}.";
-				throw new InvalidOperationException(error);
-			}
-
 			ThrowIfPrologueInvalid();
 
 			byte[] noiseSocketInit = noiseSocketInit1;
@@ -765,42 +783,25 @@ namespace Noise
 
 			var prologue = config.Prologue.AsSpan();
 			var length = noiseSocketInit.Length + savedMessages.Sum(message => LenFieldSize + message.Length) + prologue.Length;
-			var pool = ArrayPool<byte>.Shared;
-			var buffer = pool.Rent(length);
+			var buffer = new byte[length];
 
-			try
+			noiseSocketInit.AsSpan().CopyTo(buffer);
+			var next = buffer.AsSpan(noiseSocketInit.Length);
+
+			foreach (var message in savedMessages)
 			{
-				noiseSocketInit.AsSpan().CopyTo(buffer);
-				var next = buffer.AsSpan(noiseSocketInit.Length);
-
-				foreach (var message in savedMessages)
-				{
-					WritePacket(message.Span, next);
-					next = next.Slice(LenFieldSize + message.Length);
-				}
-
-				if (state == State.Switch || state == State.Retry)
-				{
-					savedMessages = null;
-				}
-
-				prologue.CopyTo(next);
-
-				var handshakeState = protocol.Create(
-					config.Initiator,
-					buffer.AsSpan(0, length),
-					config.LocalStatic,
-					config.RemoteStatic,
-					config.PreSharedKeys
-				);
-
-				initializer?.Invoke(handshakeState);
-				return handshakeState;
+				WritePacket(message.Span, next);
+				next = next.Slice(LenFieldSize + message.Length);
 			}
-			finally
+
+			if (state == State.Switch || state == State.Retry)
 			{
-				pool.Return(buffer);
+				savedMessages = null;
 			}
+
+			prologue.CopyTo(next);
+
+			return buffer;
 		}
 
 		private bool IsPrologueValid()
