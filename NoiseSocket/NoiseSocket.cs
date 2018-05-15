@@ -534,11 +534,6 @@ namespace Noise
 			var noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
 			ProcessMessage(HandshakeOperation.ReadHandshakeMessage, noiseMessage, false);
 
-			if (noiseMessage.Length == 0)
-			{
-				return empty;
-			}
-
 			var plaintext = new byte[noiseMessage.Length];
 			var (bytesRead, handshakeHash, transport) = handshakeState.ReadMessage(noiseMessage, plaintext);
 

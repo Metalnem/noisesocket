@@ -12,7 +12,7 @@ namespace Noise.Examples
 		private const int PaddedLength = 100;
 
 		private static readonly Protocol protocol = Protocol.Parse("Noise_XX_25519_AESGCM_BLAKE2b".AsSpan());
-		private static readonly byte[] negotiationData = new byte[] { 0, 1, 1, 2, 2, 9 };
+		private static readonly byte[] clientNegotiationData = new byte[] { 0, 1, 1, 2, 2, 9 };
 
 		public static void Main(string[] args)
 		{
@@ -32,11 +32,15 @@ namespace Noise.Examples
 					using (var stream = client.GetStream())
 					using (var noise = new NoiseSocket(protocol, config, stream))
 					{
-						await noise.WriteHandshakeMessageAsync(negotiationData: negotiationData, paddedLength: PaddedLength);
+						await noise.WriteHandshakeMessageAsync(negotiationData: clientNegotiationData, paddedLength: PaddedLength);
+						var serverNegotiationData = await noise.ReadNegotiationDataAsync();
 
-						await noise.ReadNegotiationDataAsync();
+						if (serverNegotiationData.Length > 0)
+						{
+							throw new Exception("Unsupported Noise protocol.");
+						}
+
 						await noise.ReadHandshakeMessageAsync();
-
 						await noise.WriteHandshakeMessageAsync(paddedLength: PaddedLength);
 
 						var request = Encoding.UTF8.GetBytes("I'm cooking MC's like a pound of bacon");

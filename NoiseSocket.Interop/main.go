@@ -36,6 +36,7 @@ func main() {
 
 func serve(conn net.Conn) {
 	buf := make([]byte, 1024)
+	defer conn.Close()
 
 	for {
 		n, err := conn.Read(buf)
