@@ -589,6 +589,17 @@ namespace Noise
 				throw new InvalidOperationException(error);
 			}
 
+			if (client && (savedMessages == null || savedMessages.Count != 3))
+			{
+				string error = $"Client can ignore only the initial handshake message from the server in the Retry case.";
+				throw new InvalidOperationException(error);
+			}
+
+			if (!client && (savedMessages == null || savedMessages.Count != 1))
+			{
+				throw new InvalidOperationException($"Server can ignore only the initial handshake message from the client.");
+			}
+
 			var noiseMessage = await ReadPacketAsync(stream, cancellationToken).ConfigureAwait(false);
 			ProcessMessage(HandshakeOperation.ReadHandshakeMessage, noiseMessage, false);
 		}
