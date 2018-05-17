@@ -373,7 +373,6 @@ namespace Noise
 			// negotiation_data
 			// noise_message_len (2 bytes)
 			// noise_message
-
 			int negotiationLength = LenFieldSize + negotiationData.Length;
 			int maxNoiseLength = LenFieldSize + Protocol.MaxMessageLength;
 
@@ -451,6 +450,15 @@ namespace Noise
 			if (negotiationData.Length > Protocol.MaxMessageLength)
 			{
 				throw new ArgumentException($"Negotiation data must be less than or equal to {Protocol.MaxMessageLength} bytes in length.");
+			}
+
+			// Only the server can call WriteEmptyHandshakeMessageAsync,
+			// and not always—just in the Retry case, after receiving
+			// the initial handshake message.
+			if (client || state != State.Retry || savedMessages == null || savedMessages.Count != 2)
+			{
+				string error = $"{nameof(WriteEmptyHandshakeMessageAsync)} can only be called by the server in the Retry case.";
+				throw new InvalidOperationException(error);
 			}
 
 			ProcessMessage(HandshakeOperation.WriteNegotiationData, negotiationData);
@@ -810,7 +818,6 @@ namespace Noise
 			{
 				// The initial negotiation_data_len
 				// The initial negotiation_data
-
 				return savedMessages.Count == 1;
 			}
 
@@ -822,7 +829,6 @@ namespace Noise
 				// The initial noise_message
 				// The responding negotiation_data_len
 				// The responding negotiation_data
-
 				return savedMessages.Count == 3;
 			}
 
@@ -838,7 +844,6 @@ namespace Noise
 				// The responding noise_message (zero-length, shown for completeness)
 				// The retry negotiation_data_len
 				// The retry negotiation_data
-
 				return savedMessages.Count == 5;
 			}
 
