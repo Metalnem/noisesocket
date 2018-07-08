@@ -924,17 +924,35 @@ namespace Noise
 
 		private static async Task<byte[]> ReadPacketAsync(Stream stream, CancellationToken cancellationToken = default)
 		{
-			byte[] length = new byte[LenFieldSize];
-			await stream.ReadAsync(length, 0, length.Length, cancellationToken).ConfigureAwait(false);
+			var lengthBuffer = await ReadFullAsync(stream, LenFieldSize, cancellationToken).ConfigureAwait(false);
+			var messageLength = BinaryPrimitives.ReadUInt16BigEndian(lengthBuffer);
 
-			byte[] data = new byte[BinaryPrimitives.ReadUInt16BigEndian(length)];
-
-			if (data.Length > 0)
+			if (messageLength == 0)
 			{
-				await stream.ReadAsync(data, 0, data.Length, cancellationToken).ConfigureAwait(false);
+				return Array.Empty<byte>();
 			}
 
-			return data;
+			return await ReadFullAsync(stream, messageLength, cancellationToken).ConfigureAwait(false);
+		}
+
+		private static async Task<byte[]> ReadFullAsync(Stream stream, int count, CancellationToken cancellationToken = default)
+		{
+			var buffer = new byte[count];
+			var offset = 0;
+
+			while (offset < count)
+			{
+				int read = await stream.ReadAsync(buffer, offset, count - offset, cancellationToken).ConfigureAwait(false);
+
+				if (read == 0)
+				{
+					throw new IOException("Unexpected EOF.");
+				}
+
+				offset += read;
+			}
+
+			return buffer;
 		}
 
 		private static bool IsInitialMessageEncrypted(Protocol protocol)
