@@ -44,5 +44,5 @@ title: NoiseSocket.NET
 ## Installation
 
 ```
-> dotnet add package NoiseSocket.NET --version 0.9.0
+> dotnet add package NoiseSocket.NET --version 0.9.1
 ```
